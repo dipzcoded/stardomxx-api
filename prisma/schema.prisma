@@ -1,0 +1,121 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 Int                 @id @default(autoincrement())
+  firstName          String
+  lastName           String
+  country            String
+  email              String              @unique
+  password           String
+  phoneNumber        String
+  matricNumber       String
+  isVerified         Boolean             @default(false)
+  isActivated        Boolean             @default(false)
+  profile            Profile?
+  UserOtpToken       UserOtpToken?
+  PasswordResetToken PasswordResetToken?
+  posts UserPosts[]
+  @@map("user")
+}
+
+model UserOtpToken {
+  id         Int      @id @default(autoincrement())
+  userId     Int      @unique
+  user       User     @relation(fields: [userId], onDelete: Cascade, references: [id])
+  expireTime DateTime
+  token      String
+
+  @@map("userOtpToken")
+}
+
+model PasswordResetToken {
+  id         Int      @id @default(autoincrement())
+  userId     Int      @unique
+  user       User     @relation(fields: [userId], onDelete: Cascade, references: [id])
+  token      String
+  expireTime DateTime
+
+  @@map("passwordResetToken")
+}
+
+model Profile {
+  id         Int             @id @default(autoincrement())
+  userId     Int             @unique
+  user       User            @relation(fields: [userId], onDelete: Cascade, references: [id])
+  passportImage   String
+  address    String
+  address2   String?
+  town       String
+  state      String
+  nextOfKins UserNextOfKin?
+  userEmergencyContact UserEmergencyContact?
+
+  @@map("profile")
+}
+
+model UserNextOfKin {
+  id           Int     @id @default(autoincrement())
+  profileId    Int @unique
+  profile      Profile @relation(fields: [profileId], onDelete: Cascade, references: [id])
+  name         String
+   passportImage   String
+  relationshipType String
+  phoneNumber       String
+  address      String
+  address2     String?
+  town         String
+  state        String
+
+  @@map("userNextOfKin")
+}
+
+model UserEmergencyContact {
+  id Int @id @default(autoincrement())
+  profileId Int @unique
+   profile      Profile @relation(fields: [profileId], onDelete: Cascade, references: [id])
+  name         String
+   passportImage   String
+  relationshipType String
+  phoneNumber       String
+  address      String
+  address2     String?
+  town         String
+  state        String
+
+  @@map("userEmergencyContact")
+}
+
+model UserPosts {
+
+  id Int @id @default(autoincrement())
+  userId Int
+  user User @relation(fields: [userId], onDelete: Cascade,references: [id])
+  title String?
+  content String?
+
+@@map("userPosts")
+
+}
+
+model Contest {
+  id Int @id @default(autoincrement())
+  name String
+  amountWinning Int
+  maxContestant Int @default(100)
+  noFreewildCards Int @default(2)
+  prize Int 
+  category String
+  duration String @default("3 Weeks")
+  durationExpiration BigInt
+  @@map("contests")
+}
