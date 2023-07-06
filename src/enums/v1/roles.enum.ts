@@ -1,0 +1,6 @@
+export enum RolesEnum {
+  SUPER_ADMIN = "SUPER_ADMIN",
+  MODERATOR = "MODERATOR",
+  AUDIENCE = "AUDIENCE",
+  CONTESTANT = "CONTESTANT",
+}

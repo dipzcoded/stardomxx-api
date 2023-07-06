@@ -11,111 +11,264 @@ datasource db {
 }
 
 model User {
-  id                 Int                 @id @default(autoincrement())
-  firstName          String
-  lastName           String
-  country            String
-  email              String              @unique
-  password           String
-  phoneNumber        String
-  matricNumber       String
-  isVerified         Boolean             @default(false)
-  isActivated        Boolean             @default(false)
-  profile            Profile?
-  UserOtpToken       UserOtpToken?
-  PasswordResetToken PasswordResetToken?
-  posts UserPosts[]
+  id                      Int                  @id @default(autoincrement())
+  firstName               String?
+  lastName                String?
+  country                 String?
+  email                   String               @unique
+  password                String?
+  phoneNumber             String?
+  matricNumber            String?
+  isVerified              Boolean              @default(false)
+  isActivated             Boolean              @default(false)
+  role                    String
+  profile                 Profile?
+  userActivationToken     UserActivationToken?
+  userOtpToken            UserOtpToken?
+  PasswordResetToken      PasswordResetToken?
+  posts                   UserPosts[]
+  contestPost             ContestPosts[]
+  followers               UserFollowers[]      @relation(name: "Followers")
+  userFollowing           UserFollowing[]      @relation(name: "Following")
+  userContestPostComments ContestPostComment[]
+  userContestsLikes       ContestPostLikes[]
+  userPostComments        UserPostComment[]
+  userPostLikes           UserPostLikes[]
+  userContestPostVotes    ContestPostVote[]
+  secretQuestion          UserSecretQuestion?
+  createdAt               DateTime             @default(now())
+  updatedAt               DateTime             @updatedAt
+
   @@map("user")
 }
 
+model UserSecretQuestion {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  user      User     @relation(fields: [userId], onDelete: Cascade, references: [id])
+  question  String
+  answer    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("usersecretquestion")
+}
+
 model UserOtpToken {
-  id         Int      @id @default(autoincrement())
-  userId     Int      @unique
-  user       User     @relation(fields: [userId], onDelete: Cascade, references: [id])
-  expireTime DateTime
-  token      String
+  id                  Int      @id @default(autoincrement())
+  userId              Int      @unique
+  user                User     @relation(fields: [userId], onDelete: Cascade, references: [id])
+  expireTime          DateTime
+  token               String
+  secretKey           String
+  expirationinseconds BigInt
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
   @@map("userOtpToken")
 }
 
+model UserActivationToken {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  user      User     @relation(fields: [userId], onDelete: Cascade, references: [id])
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("userActivationToken")
+}
+
 model PasswordResetToken {
-  id         Int      @id @default(autoincrement())
-  userId     Int      @unique
-  user       User     @relation(fields: [userId], onDelete: Cascade, references: [id])
-  token      String
-  expireTime DateTime
+  id                  Int      @id @default(autoincrement())
+  userId              Int      @unique
+  user                User     @relation(fields: [userId], onDelete: Cascade, references: [id])
+  token               String
+  expireTime          DateTime
+  expirationinseconds BigInt
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
   @@map("passwordResetToken")
 }
 
 model Profile {
-  id         Int             @id @default(autoincrement())
-  userId     Int             @unique
-  user       User            @relation(fields: [userId], onDelete: Cascade, references: [id])
-  passportImage   String
-  address    String
-  address2   String?
-  town       String
-  state      String
-  nextOfKins UserNextOfKin?
+  id                   Int                   @id @default(autoincrement())
+  userId               Int                   @unique
+  user                 User                  @relation(fields: [userId], onDelete: Cascade, references: [id])
+  passportImage        String
+  address              String
+  address2             String?
+  town                 String
+  state                String
+  nextOfKins           UserNextOfKin?
   userEmergencyContact UserEmergencyContact?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
 
   @@map("profile")
 }
 
 model UserNextOfKin {
-  id           Int     @id @default(autoincrement())
-  profileId    Int @unique
-  profile      Profile @relation(fields: [profileId], onDelete: Cascade, references: [id])
-  name         String
-   passportImage   String
+  id               Int      @id @default(autoincrement())
+  profileId        Int      @unique
+  profile          Profile  @relation(fields: [profileId], onDelete: Cascade, references: [id])
+  name             String
+  passportImage    String
   relationshipType String
-  phoneNumber       String
-  address      String
-  address2     String?
-  town         String
-  state        String
+  phoneNumber      String
+  address          String
+  address2         String?
+  town             String
+  state            String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   @@map("userNextOfKin")
 }
 
 model UserEmergencyContact {
-  id Int @id @default(autoincrement())
-  profileId Int @unique
-   profile      Profile @relation(fields: [profileId], onDelete: Cascade, references: [id])
-  name         String
-   passportImage   String
+  id               Int      @id @default(autoincrement())
+  profileId        Int      @unique
+  profile          Profile  @relation(fields: [profileId], onDelete: Cascade, references: [id])
+  name             String
+  passportImage    String
   relationshipType String
-  phoneNumber       String
-  address      String
-  address2     String?
-  town         String
-  state        String
+  phoneNumber      String
+  address          String
+  address2         String?
+  town             String
+  state            String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   @@map("userEmergencyContact")
 }
 
+model UserFollowers {
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  userFollowers User[]   @relation(name: "Followers")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("userfollowers")
+}
+
+model UserFollowing {
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  userFollowing User[]   @relation(name: "Following")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("userfollowering")
+}
+
 model UserPosts {
+  id               Int               @id @default(autoincrement())
+  userId           Int
+  user             User              @relation(fields: [userId], onDelete: Cascade, references: [id])
+  content          String
+  userPostComments UserPostComment[]
+  userPostLikes    UserPostLikes[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
 
-  id Int @id @default(autoincrement())
-  userId Int
-  user User @relation(fields: [userId], onDelete: Cascade,references: [id])
-  title String?
-  content String?
+  @@map("userPosts")
+}
 
-@@map("userPosts")
+model UserPostComment {
+  id        Int       @id @default(autoincrement())
+  postId    Int
+  userId    Int
+  comment   String
+  contest   UserPosts @relation(fields: [postId], onDelete: Cascade, references: [id])
+  user      User      @relation(fields: [userId], onDelete: Cascade, references: [id])
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
+  @@map("userpostcomments")
+}
+
+model UserPostLikes {
+  id        Int       @id @default(autoincrement())
+  postId    Int
+  userId    Int
+  contest   UserPosts @relation(fields: [postId], onDelete: Cascade, references: [id])
+  user      User      @relation(fields: [userId], onDelete: Cascade, references: [id])
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@map("userpostlikes")
 }
 
 model Contest {
-  id Int @id @default(autoincrement())
-  name String
-  amountWinning Int
-  maxContestant Int @default(100)
-  noFreewildCards Int @default(2)
-  prize Int 
-  category String
-  duration String @default("3 Weeks")
+  id                 Int            @id @default(autoincrement())
+  name               String
+  amountWinning      Int
+  maxContestant      Int            @default(100)
+  noFreewildCards    Int            @default(2)
+  prize              Int
+  category           String
+  duration           String         @default("3 Weeks")
   durationExpiration BigInt
+  contestPosts       ContestPosts[]
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
   @@map("contests")
+}
+
+model ContestPosts {
+  id                  Int                  @id @default(autoincrement())
+  contestId           Int
+  userId              Int
+  content             String
+  contest             Contest              @relation(fields: [contestId], onDelete: Cascade, references: [id])
+  user                User                 @relation(fields: [userId], onDelete: Cascade, references: [id])
+  contestPostComments ContestPostComment[]
+  contestPostLikes    ContestPostLikes[]
+  contestPostVotes    ContestPostVote[]
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+
+  @@map("contestposts")
+}
+
+model ContestPostComment {
+  id            Int          @id @default(autoincrement())
+  contestPostId Int
+  userId        Int
+  comment       String
+  contest       ContestPosts @relation(fields: [contestPostId], onDelete: Cascade, references: [id])
+  user          User         @relation(fields: [userId], onDelete: Cascade, references: [id])
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@map("contestpostcomments")
+}
+
+model ContestPostLikes {
+  id            Int          @id @default(autoincrement())
+  contestPostId Int
+  userId        Int
+  contest       ContestPosts @relation(fields: [contestPostId], onDelete: Cascade, references: [id])
+  user          User         @relation(fields: [userId], onDelete: Cascade, references: [id])
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@map("contestpostlikes")
+}
+
+model ContestPostVote {
+  id            Int          @id @default(autoincrement())
+  contestPostId Int
+  userId        Int
+  contest       ContestPosts @relation(fields: [contestPostId], onDelete: Cascade, references: [id])
+  user          User         @relation(fields: [userId], onDelete: Cascade, references: [id])
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@map("contestpostvotes")
 }
