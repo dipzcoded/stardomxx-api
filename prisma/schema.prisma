@@ -25,7 +25,7 @@ model User {
   profile                 Profile?
   userActivationToken     UserActivationToken?
   userOtpToken            UserOtpToken?
-  PasswordResetToken      PasswordResetToken?
+  passwordResetToken      PasswordResetToken?
   posts                   UserPosts[]
   contestPost             ContestPosts[]
   followers               UserFollowers[]      @relation(name: "Followers")
@@ -72,7 +72,7 @@ model UserActivationToken {
   id        Int      @id @default(autoincrement())
   userId    Int      @unique
   user      User     @relation(fields: [userId], onDelete: Cascade, references: [id])
-  token     String
+  token     String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -84,7 +84,6 @@ model PasswordResetToken {
   userId              Int      @unique
   user                User     @relation(fields: [userId], onDelete: Cascade, references: [id])
   token               String
-  expireTime          DateTime
   expirationinseconds BigInt
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt

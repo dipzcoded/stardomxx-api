@@ -12,12 +12,12 @@ export default (
     return res.status(err.statusCode).json(err.serializeErrors());
   }
 
-  console.error(err);
+  // console.error(err);
   res.status(ResponseStatusCodeEnum.BAD).json({
     status: "failed",
     errors: [
       {
-        message: "Something went wrong",
+        message: err.message,
       },
     ],
   });

@@ -1,4 +1,4 @@
 export type RequestValidationErrorType = {
   message: string;
-  field?: string;
+  path?: string;
 };

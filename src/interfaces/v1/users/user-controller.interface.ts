@@ -1,19 +1,11 @@
 import { NextFunction, Request, Response } from "express";
-import { PreRegisterAccountWithEmailResponse } from "./user-controller-responses.interface";
+import { UserLoggedInRequest } from "../../../utils/v1";
 
 export interface UserControllerInterface {
-  preRegisterAccountWithEmail(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void>;
-  completeUserRegistration(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void>;
+  init(req: Request, res: Response, next: NextFunction): Promise<void>;
+  registration(req: Request, res: Response, next: NextFunction): Promise<void>;
   login(req: Request, res: Response, next: NextFunction): Promise<void>;
-  activateAccountWithOtp(
+  activateAccountWithToken(
     req: Request,
     res: Response,
     next: NextFunction
@@ -24,4 +16,9 @@ export interface UserControllerInterface {
     next: NextFunction
   ): Promise<void>;
   resetPassword(req: Request, res: Response, next: NextFunction): Promise<void>;
+  getCurrentLoggedInUser(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void>;
 }

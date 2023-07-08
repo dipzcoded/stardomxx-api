@@ -1,26 +1,12 @@
+import { User } from "@prisma/client";
 import { ResponseStatusSignalEnum } from "../../../enums/v1";
 
-export interface PreRegisterAccountWithEmailResponse {
+export interface UserResponse {
   status: ResponseStatusSignalEnum;
   payload: string;
 }
 
-export interface CompleteUserRegistrationResponse {
+export interface GetCurrentLoggedinUserResponse {
   status: ResponseStatusSignalEnum;
-  payload: string;
-}
-
-export interface LoginResponse {
-  status: ResponseStatusSignalEnum;
-  payload: string;
-}
-
-export interface ForgotPasswordResponse {
-  status: ResponseStatusSignalEnum;
-  payload: string;
-}
-
-export interface ResetPasswordResponse {
-  status: ResponseStatusSignalEnum;
-  payload: string;
+  payload: User;
 }

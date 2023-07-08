@@ -29,21 +29,22 @@ export default (req: Request, res: Response, next: NextFunction) => {
         process.env.JWT_SECRET!
       ) as JwtPayloadFormatType;
       req.user = payload;
+
       next();
     } catch (error) {
       if (error instanceof TokenExpiredError) {
-        throw new InvalidRequestError("Authorization is Invalid");
+        next(new InvalidRequestError("Authorization is Invalid"));
       }
 
       if (error instanceof JsonWebTokenError) {
-        throw new InvalidRequestError("Authorization is Invalid");
+        next(new InvalidRequestError("Authorization is Invalid"));
       }
 
       if (error instanceof NotBeforeError) {
-        throw new InvalidRequestError("Authorization is Invalid");
+        next(new InvalidRequestError("Authorization is Invalid"));
       }
     }
   } else {
-    throw new ForbiddenError("No Bearer token passed!");
+    next(new ForbiddenError("No Bearer token passed!"));
   }
 };
