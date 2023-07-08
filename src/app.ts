@@ -21,7 +21,7 @@ app.use(
 
 app.get("/", (req: Request, res: Response, next: NextFunction) => {
   return res.json({
-    message: "welcome",
+    message: "welcome to stardomx api",
   });
 });
 
