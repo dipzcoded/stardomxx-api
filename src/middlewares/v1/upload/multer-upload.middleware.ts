@@ -33,6 +33,7 @@ export const uploadStorage = multer({
       callback(
         new Error("Invalid file type. Only jpg,jpeg and png files are allowed.")
       );
+      return;
     }
   },
 });
