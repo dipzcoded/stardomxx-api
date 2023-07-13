@@ -1,29 +1,18 @@
 import { User } from "@prisma/client";
-import axios from "axios";
-import FormData from "form-data";
-import https from "https";
-
-const formData = new FormData();
+import { transportInit } from "../../transporter-client.email";
 
 export const userPasswordResetMail = async (user: User, url: string) => {
-  // console.log(`calling: ${user.email}`);
-  const axiosAgent = new https.Agent({
-    rejectUnauthorized: false,
-  });
-  formData.append("to", user.email);
-  formData.append("subject", "Reset Password");
-  formData.append("text", `This is a password reset link: ${url}`);
-  formData.append(
-    "html",
-    `<p>This is a password reset link: <a href=${url}>reset</a></p>`
-  );
+  const mailOptions = {
+    from: "stardom@mail.io",
+    to: user.email,
+    subject: "Password Reset",
+    text: `This is the password reset link to reset your password: ${url}`,
+  };
 
   try {
-    await axios.post(process.env.EMAIL_SENDING_URL!, formData, {
-      httpsAgent: axiosAgent,
-    });
-    return;
-  } catch (err) {
-    throw err;
+    const transporter = await transportInit();
+    transporter!.sendMail(mailOptions);
+  } catch (error) {
+    console.error(error);
   }
 };

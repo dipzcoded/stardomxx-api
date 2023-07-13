@@ -3,4 +3,5 @@ export enum RolesEnum {
   MODERATOR = "MODERATOR",
   AUDIENCE = "AUDIENCE",
   CONTESTANT = "CONTESTANT",
+  USER = "USER",
 }

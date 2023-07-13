@@ -13,7 +13,7 @@ import {
   setToken,
 } from "../../../utils/v1/users";
 import { UserLoggedInRequest, prismaClient } from "../../../utils/v1";
-import { sendActivationTokenToUserMail } from "../../../utils/v1/emails/users/handlers";
+
 import {
   UserResponse,
   GetCurrentLoggedinUserResponse,
@@ -31,7 +31,10 @@ import {
 import { User } from "@prisma/client";
 import { compareUserPassword } from "../../../utils/v1/users/hash-user-password.util";
 import { setPasswordResetTokenExpiresDate } from "../../../utils/v1/users/generate-token.util";
-import { userPasswordResetMail } from "../../../utils/v1/emails/users/handlers/password-reset-email.handler";
+import {
+  userPasswordResetMail,
+  sendActivationTokenToUserMail,
+} from "../../../utils/v1/emails/users/handlers";
 
 class UserController implements UserControllerInterface {
   async init(
@@ -57,7 +60,6 @@ class UserController implements UserControllerInterface {
         },
       });
       if (userFound) {
-        // TODO: throw an error message
         throw new BadRequestError("User already exist with the provided email");
       }
     } catch (error) {
@@ -71,7 +73,7 @@ class UserController implements UserControllerInterface {
     const newUser = await prismaClient.user.create({
       data: {
         email,
-        role: RolesEnum.AUDIENCE,
+        role: RolesEnum.USER,
         country,
         firstName,
         lastName,
@@ -116,7 +118,6 @@ class UserController implements UserControllerInterface {
     });
 
     if (!userFoundWithToken) {
-      // TODO: throw an error
       next(new InvalidRequestError("invalid token"));
       return;
     }
@@ -161,20 +162,17 @@ class UserController implements UserControllerInterface {
     });
 
     if (!user) {
-      // TODO: throw an error
       next(new InvalidRequestError("Invalid Credentails"));
       return;
     }
 
     const isPassordMatch = await compareUserPassword(password, user);
     if (!isPassordMatch) {
-      // TODO: throw an error
       next(new InvalidRequestError("Invalid Credentails"));
       return;
     }
 
     if (!user.isActivated) {
-      // TODO: throw an error
       next(new ForbiddenError("Activate your account before logged in"));
       return;
     }
@@ -228,7 +226,6 @@ class UserController implements UserControllerInterface {
     });
 
     if (!userFound) {
-      // TODO: throw an error
       next(new BadRequestError("User doesnt exist with the email provided."));
       return;
     }
@@ -303,7 +300,6 @@ class UserController implements UserControllerInterface {
     // },
 
     if (!userWithToken) {
-      // TODO: throw an error
       next(new InvalidRequestError("Token is invalid"));
       return;
     }
@@ -343,4 +339,4 @@ class UserController implements UserControllerInterface {
   }
 }
 
-export default new UserController();
+export default UserController;

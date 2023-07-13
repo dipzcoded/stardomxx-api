@@ -1,5 +1,4 @@
 import { NextFunction, Request, Response } from "express";
-import { UserLoggedInRequest } from "../../../utils/v1";
 
 export interface UserControllerInterface {
   init(req: Request, res: Response, next: NextFunction): Promise<void>;
