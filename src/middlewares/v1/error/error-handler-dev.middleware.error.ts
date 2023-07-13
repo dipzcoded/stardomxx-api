@@ -14,33 +14,21 @@ export default (
   res: Response,
   next: NextFunction
 ) => {
-  // @ts-ignore
-  const filePath = req.files[0]["path"] as PathLike;
-
-  fs.access(filePath, fs.constants.F_OK, (err) => {
-    if (err) {
-      if (err.code === "ENOENT") {
-        return res.status(ResponseStatusCodeEnum.NOT_FOUND).json({
-          status: ResponseStatusSignalEnum.FAILED,
-          errors: [
-            {
-              message: "File does not exist",
-            },
-          ],
-        });
-      } else {
-        return res.status(ResponseStatusCodeEnum.SERVER_ERROR).json({
-          status: ResponseStatusSignalEnum.FAILED,
-          errors: [
-            {
-              message: err.message,
-            },
-          ],
-        });
-      }
-    } else {
-      fs.unlink(filePath, (err) => {
-        if (err) {
+  if (req.files !== undefined && req.files.length) {
+    // @ts-ignore
+    const filePath = req.files[0]["path"] as PathLike;
+    fs.access(filePath, fs.constants.F_OK, (err) => {
+      if (err) {
+        if (err.code === "ENOENT") {
+          return res.status(ResponseStatusCodeEnum.NOT_FOUND).json({
+            status: ResponseStatusSignalEnum.FAILED,
+            errors: [
+              {
+                message: "File does not exist",
+              },
+            ],
+          });
+        } else {
           return res.status(ResponseStatusCodeEnum.SERVER_ERROR).json({
             status: ResponseStatusSignalEnum.FAILED,
             errors: [
@@ -50,10 +38,23 @@ export default (
             ],
           });
         }
-        return;
-      });
-    }
-  });
+      } else {
+        fs.unlink(filePath, (err) => {
+          if (err) {
+            return res.status(ResponseStatusCodeEnum.SERVER_ERROR).json({
+              status: ResponseStatusSignalEnum.FAILED,
+              errors: [
+                {
+                  message: err.message,
+                },
+              ],
+            });
+          }
+          return;
+        });
+      }
+    });
+  }
 
   if (err instanceof CustomError) {
     return res.status(err.statusCode).json(err.serializeErrors());
