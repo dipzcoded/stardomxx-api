@@ -1,3 +1,4 @@
 import userRoute from "./users/user.route";
 import profileRoute from "./profiles/profile.route";
-export { userRoute, profileRoute };
+import followRoute from "./following/following.route";
+export { userRoute, profileRoute, followRoute };

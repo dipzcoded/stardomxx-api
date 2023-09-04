@@ -1,1 +1,4 @@
-export { uploadStorage } from "./multer-upload.middleware";
+export {
+  uploadImageStorage,
+  uploadVideoStorage,
+} from "./multer-upload.middleware";

@@ -9,6 +9,11 @@ export interface UserControllerInterface {
     res: Response,
     next: NextFunction
   ): Promise<void>;
+  uploadProfilePicture(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void>;
   forgotPassword(
     req: Request,
     res: Response,

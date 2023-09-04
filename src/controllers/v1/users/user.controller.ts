@@ -12,7 +12,11 @@ import {
   hashUserPassword,
   setToken,
 } from "../../../utils/v1/users";
-import { UserLoggedInRequest, prismaClient } from "../../../utils/v1";
+import {
+  UserLoggedInRequest,
+  cloudinaryV2,
+  prismaClient,
+} from "../../../utils/v1";
 
 import {
   UserResponse,
@@ -35,8 +39,83 @@ import {
   userPasswordResetMail,
   sendActivationTokenToUserMail,
 } from "../../../utils/v1/emails/users/handlers";
-
+import { PathLike } from "fs";
+import fs from "graceful-fs";
 class UserController implements UserControllerInterface {
+  async uploadProfilePicture(
+    req: Request<{}, any, any, {}, Record<string, any>>,
+    res: Response<UserResponse, Record<string, any>>,
+    next: NextFunction
+  ): Promise<void> {
+    const customRequest = req as UserLoggedInRequest;
+    if (customRequest.files === undefined || !customRequest.files.length) {
+      next(new BadRequestError("a file must be uploaded"));
+      return;
+    }
+
+    const files = req.files as Express.Multer.File[];
+
+    if (files.length > 1) {
+      next(new BadRequestError("a maximum upload of one file"));
+      return;
+    }
+
+    const filePath = files[0]["path"] as PathLike;
+    const fileName = files[0]["filename"];
+
+    try {
+      fs.open(filePath, "r", (openErr, fd) => {
+        if (openErr) {
+          throw openErr;
+        }
+
+        fs.close(fd, (closeErr) => {
+          if (closeErr) {
+            throw closeErr;
+          }
+
+          cloudinaryV2.uploader.upload(
+            filePath.toString(),
+            {
+              resource_type: "raw",
+              folder: "storgae/upload/",
+              public_id: fileName,
+              use_filename: true,
+              unique_filename: false,
+            },
+            async (cloudErr, result) => {
+              if (cloudErr) {
+                throw cloudErr;
+              }
+
+              await prismaClient.user.update({
+                where: {
+                  id: customRequest.user.id,
+                },
+                data: {
+                  profilePicture: result!.secure_url,
+                },
+              });
+
+              fs.unlink(filePath, (unlinkErr) => {
+                if (unlinkErr) {
+                  throw unlinkErr;
+                }
+              });
+            }
+          );
+        });
+      });
+    } catch (error) {
+      next(error);
+      return;
+    }
+
+    res.status(ResponseStatusCodeEnum.OK).json({
+      status: ResponseStatusSignalEnum.SUCCESS,
+      payload: "profile picture uploaded successfully!",
+    });
+  }
   async init(
     req: Request<{}, any, any, {}, Record<string, any>>,
     res: Response<any, Record<string, any>>,

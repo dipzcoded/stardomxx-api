@@ -16,11 +16,11 @@ const storage = multer.diskStorage({
   },
 });
 
-export const uploadStorage = multer({
+export const uploadImageStorage = multer({
   storage,
   limits: {
-    files: 1,
-    fileSize: 50000,
+    files: 4,
+    fileSize: 1024 * 1024 * 10,
   },
   fileFilter(req, file, callback) {
     const allowedExtensions = [".jpg", ".jpeg", ".png"];
@@ -34,6 +34,25 @@ export const uploadStorage = multer({
         new Error("Invalid file type. Only jpg,jpeg and png files are allowed.")
       );
       return;
+    }
+  },
+});
+
+export const uploadVideoStorage = multer({
+  storage,
+  limits: {
+    files: 1,
+    fileSize: 1024 * 1024 * 50,
+  },
+  fileFilter(req, file, callback) {
+    const allowedExtensions = [".gif", ".mp4"];
+    const fileExt = path.extname(file.originalname).toLocaleLowerCase();
+    if (allowedExtensions.includes(fileExt)) {
+      callback(null, true);
+    } else {
+      callback(
+        new Error("Invalid file type. Only mp4 and gif files are allowed.")
+      );
     }
   },
 });

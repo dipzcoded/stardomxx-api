@@ -1,5 +1,5 @@
 import { router } from "../../../utils/v1";
-import { uploadStorage } from "../../../middlewares/v1/upload";
+import { uploadImageStorage } from "../../../middlewares/v1/upload";
 import { ProfileController } from "../../../controllers/v1";
 import { requestValidationMiddleware } from "../../../middlewares/v1/validator";
 import { requiresAuthMiddleware } from "../../../middlewares/v1/auth";
@@ -24,7 +24,7 @@ router
   .route("/upload-passport")
   .patch(
     requiresAuthMiddleware,
-    uploadStorage.any(),
+    uploadImageStorage.any(),
     profileController.addPassportImage
   );
 
@@ -32,7 +32,7 @@ router
   .route("/add/kin")
   .patch(
     requiresAuthMiddleware,
-    uploadStorage.any(),
+    uploadImageStorage.any(),
     addNextofkinValidator,
     requestValidationMiddleware,
     profileController.addNextOfKin
@@ -41,7 +41,7 @@ router
   .route("/add/emergency-contact")
   .patch(
     requiresAuthMiddleware,
-    uploadStorage.any(),
+    uploadImageStorage.any(),
     addEmergencycontactValidator,
     requestValidationMiddleware,
     profileController.addEmergencyOfContact

@@ -41,10 +41,24 @@ class ProfileController implements ProfileControllerInterface {
       },
       include: {
         nextOfKins: true,
-        user: true,
+        user: {
+          include: {
+            contestPost: true,
+            followers: true,
+            userFollowing: true,
+            posts: true,
+          },
+        },
         userEmergencyContact: true,
       },
     });
+
+    if (!userProfile) {
+      next(new NotFoundError("User doesnt have a profile"));
+      return;
+    }
+    // @ts-ignore
+    delete userProfile.user.password;
 
     res.status(ResponseStatusCodeEnum.OK).json({
       status: ResponseStatusSignalEnum.SUCCESS,
@@ -174,10 +188,16 @@ class ProfileController implements ProfileControllerInterface {
       return;
     }
 
-    // @ts-ignore
-    const filePath = customRequest.files[0]["path"] as PathLike;
-    // @ts-ignore
-    const fileName = customRequest.files[0]["filename"] as string | undefined;
+    const files = customRequest.files as Express.Multer.File[];
+
+    if (files.length > 1) {
+      next(new BadRequestError("a maximum upload of one file"));
+      return;
+    }
+
+    const filePath = files[0]["path"] as PathLike;
+
+    const fileName = files[0]["filename"];
     try {
       fs.open(filePath, "r", (openErr, fd) => {
         if (openErr) {
@@ -207,7 +227,7 @@ class ProfileController implements ProfileControllerInterface {
                   userId: customRequest.user.id,
                 },
                 data: {
-                  passportImage: result?.secure_url,
+                  passportImage: result!.secure_url,
                 },
               });
 
@@ -254,6 +274,13 @@ class ProfileController implements ProfileControllerInterface {
       return;
     }
 
+    const files = customRequest.files as Express.Multer.File[];
+
+    if (files.length > 1) {
+      next(new BadRequestError("a maximum upload of one file"));
+      return;
+    }
+
     try {
       const userProfile = await prismaClient.profile.findUnique({
         where: {
@@ -276,10 +303,9 @@ class ProfileController implements ProfileControllerInterface {
         throw new BadRequestError("User already have next of kin");
       }
 
-      // @ts-ignore
-      const filePath = customRequest.files[0]["path"] as PathLike;
-      // @ts-ignore
-      const fileName = customRequest.files[0]["filename"] as string | undefined;
+      const filePath = files[0]["path"] as PathLike;
+
+      const fileName = files[0]["filename"];
 
       fs.open(filePath, "r", (openErr, fd) => {
         if (openErr) {
@@ -362,6 +388,13 @@ class ProfileController implements ProfileControllerInterface {
       return;
     }
 
+    const files = customRequest.files as Express.Multer.File[];
+
+    if (files.length > 1) {
+      next(new BadRequestError("a maximum upload of one file"));
+      return;
+    }
+
     try {
       const userProfile = await prismaClient.profile.findUnique({
         where: {
@@ -385,10 +418,9 @@ class ProfileController implements ProfileControllerInterface {
         throw new BadRequestError("User already have an emergency contact");
       }
 
-      // @ts-ignore
-      const filePath = customRequest.files[0]["path"] as PathLike;
-      // @ts-ignore
-      const fileName = customRequest.files[0]["filename"] as string | undefined;
+      const filePath = files[0]["path"] as PathLike;
+
+      const fileName = files[0]["filename"];
 
       fs.open(filePath, "r", (openErr, fd) => {
         if (openErr) {

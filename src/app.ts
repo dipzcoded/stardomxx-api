@@ -1,5 +1,5 @@
 import express, { NextFunction, Request, Response } from "express";
-import { userRoute, profileRoute } from "./routes/v1";
+import { userRoute, profileRoute, followRoute } from "./routes/v1";
 import {
   errorHandlerDevMiddlewareDev,
   notFoundRoute,
@@ -27,6 +27,7 @@ app.get("/", (req: Request, res: Response, next: NextFunction) => {
 
 app.use("/api/users", userRoute);
 app.use("/api/profiles", profileRoute);
+app.use("/api/connect", followRoute);
 
 app.use(notFoundRoute);
 

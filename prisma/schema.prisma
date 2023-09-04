@@ -21,6 +21,7 @@ model User {
   isVerified              Boolean              @default(false)
   isActivated             Boolean              @default(false)
   role                    String
+  profilePicture          String?
   profile                 Profile?
   userActivationToken     UserActivationToken?
   userOtpToken            UserOtpToken?
@@ -167,7 +168,9 @@ model UserPosts {
   id               Int               @id @default(autoincrement())
   userId           Int
   user             User              @relation(fields: [userId], onDelete: Cascade, references: [id])
-  content          String
+  content          String?
+  mediaContent     String?
+  type             String
   userPostComments UserPostComment[]
   userPostLikes    UserPostLikes[]
   createdAt        DateTime          @default(now())
