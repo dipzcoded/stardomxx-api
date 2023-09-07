@@ -1,42 +1,36 @@
 import { Request, Response, NextFunction } from "express";
 
-export interface PostControllerInterface {
-  getYourPostContents(
+export interface UserLikesPostAndCommentControllerInterface {
+  userGetLikesPost(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<void>;
-  getFollowingContents(
+  getPostLikesCount(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<void>;
-  postImageContent(
+  getPostCommentLikesCount(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<void>;
-  postVideoContent(
+  getPostCommentReplyLikeCount(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<void>;
-  postTextContent(
+  likePost(req: Request, res: Response, next: NextFunction): Promise<void>;
+  unlikePost(req: Request, res: Response, next: NextFunction): Promise<void>;
+  likeComment(req: Request, res: Response, next: NextFunction): Promise<void>;
+  unlikeComment(req: Request, res: Response, next: NextFunction): Promise<void>;
+  likeCommentReply(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<void>;
-  deleteYourPostContent(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void>;
-  postVideoForContest(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void>;
-  getOnGoingContestPost(
+  unlikeCommentReply(
     req: Request,
     res: Response,
     next: NextFunction

@@ -1,42 +1,37 @@
 import { Request, Response, NextFunction } from "express";
 
-export interface PostControllerInterface {
-  getYourPostContents(
+export interface CommentPostControllerInterface {
+  getYourAllCommentsOnPosts(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<void>;
-  getFollowingContents(
+
+  getCommentsByPostId(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<void>;
-  postImageContent(
+
+  createCommentOnPost(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<void>;
-  postVideoContent(
+
+  createCommentOnAComment(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<void>;
-  postTextContent(
+
+  updateCommentByUserOnPost(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<void>;
-  deleteYourPostContent(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void>;
-  postVideoForContest(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void>;
-  getOnGoingContestPost(
+
+  deleteCommentOnPost(
     req: Request,
     res: Response,
     next: NextFunction

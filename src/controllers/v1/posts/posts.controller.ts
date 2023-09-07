@@ -8,11 +8,9 @@ import {
   cloudinaryV2,
   UserLoggedInRequest,
 } from "../../../utils/v1";
-import {
-  PostPaginationQueryDTO,
-  PostIdParamDto,
-  PostContentBodyDto,
-} from "../../../dtos/v1/posts";
+import { PostContentBodyDto } from "../../../dtos/v1/posts";
+import { QueryPaginationDTO } from "../../../dtos/v1/query";
+import { PostIdParamDto } from "../../../dtos/v1/param";
 import {
   ResponseStatusCodeEnum,
   ResponseStatusSignalEnum,
@@ -25,10 +23,26 @@ import {
 import fs from "graceful-fs";
 import { PathLike } from "fs";
 import { PostContentType } from "../../../enums/v1/post";
+import { ParamsDictionary } from "express-serve-static-core";
+import { ParsedQs } from "qs";
 
 class PostsController implements PostControllerInterface {
+  postVideoForContest(
+    req: Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>,
+    res: Response<any, Record<string, any>>,
+    next: NextFunction
+  ): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
+  getOnGoingContestPost(
+    req: Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>,
+    res: Response<any, Record<string, any>>,
+    next: NextFunction
+  ): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
   async getYourPostContents(
-    req: Request<{}, any, any, PostPaginationQueryDTO, Record<string, any>>,
+    req: Request<{}, any, any, QueryPaginationDTO, Record<string, any>>,
     res: Response<
       PostControllerInterfaceResponse.getYourPostContents,
       Record<string, any>
@@ -58,7 +72,7 @@ class PostsController implements PostControllerInterface {
   }
 
   async getFollowingContents(
-    req: Request<{}, any, any, PostPaginationQueryDTO, Record<string, any>>,
+    req: Request<{}, any, any, QueryPaginationDTO, Record<string, any>>,
     res: Response<
       PostControllerInterfaceResponse.getFollowingContents,
       Record<string, any>

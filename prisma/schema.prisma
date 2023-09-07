@@ -6,38 +6,41 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlserver"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id                      Int                  @id @default(autoincrement())
-  firstName               String?
-  lastName                String?
-  country                 String?
-  email                   String               @unique
-  password                String?
-  phoneNumber             String?
-  isVerified              Boolean              @default(false)
-  isActivated             Boolean              @default(false)
-  role                    String
-  profilePicture          String?
-  profile                 Profile?
-  userActivationToken     UserActivationToken?
-  userOtpToken            UserOtpToken?
-  passwordResetToken      PasswordResetToken?
-  posts                   UserPosts[]
-  contestPost             ContestPosts[]
-  followers               UserFollowers[]      @relation(name: "Followers")
-  userFollowing           UserFollowing[]      @relation(name: "Following")
-  userContestPostComments ContestPostComment[]
-  userContestsLikes       ContestPostLikes[]
-  userPostComments        UserPostComment[]
-  userPostLikes           UserPostLikes[]
-  userContestPostVotes    ContestPostVote[]
-  secretQuestion          UserSecretQuestion?
-  createdAt               DateTime             @default(now())
-  updatedAt               DateTime             @updatedAt
+  id                    Int                         @id @default(autoincrement())
+  firstName             String?
+  lastName              String?
+  country               String?
+  email                 String                      @unique
+  password              String?
+  phoneNumber           String?
+  isVerified            Boolean                     @default(false)
+  isActivated           Boolean                     @default(false)
+  isSuperAdmin          Boolean                     @default(false)
+  role                  String
+  profilePicture        String?
+  profile               Profile?
+  userActivationToken   UserActivationToken?
+  userOtpToken          UserOtpToken?
+  passwordResetToken    PasswordResetToken?
+  posts                 UserPosts[]
+  followers             UserFollowers[]             @relation(name: "Followers")
+  userFollowing         UserFollowing[]             @relation(name: "Following")
+  userComment           UserComment[]
+  userPostComments      UserPostComment[]
+  userPostLikes         UserPostLikes[]
+  userContestPostVotes  ContestPostVote[]
+  userCommentLikes      UserPostCommentLikes[]
+  commentReply          UserPostCommentReply[]
+  userCommentReplyLikes UserPostCommentReplyLikes[]
+  contestant            Contestant[]
+  secretQuestion        UserSecretQuestion?
+  createdAt             DateTime                    @default(now())
+  updatedAt             DateTime                    @updatedAt
 
   @@map("user")
 }
@@ -61,7 +64,7 @@ model UserOtpToken {
   expireTime          DateTime
   token               String
   secretKey           String
-  expirationinseconds BigInt
+  expirationinseconds String
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
@@ -84,7 +87,7 @@ model PasswordResetToken {
   userId              Int      @unique
   user                User     @relation(fields: [userId], onDelete: Cascade, references: [id])
   token               String
-  expirationinseconds BigInt
+  expirationinseconds String
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
@@ -166,110 +169,156 @@ model UserFollowing {
 
 model UserPosts {
   id               Int               @id @default(autoincrement())
-  userId           Int
-  user             User              @relation(fields: [userId], onDelete: Cascade, references: [id])
+  userId           Int?
+  user             User?             @relation(fields: [userId], onDelete: Cascade, references: [id])
+  contestId        Int?
+  contest          Contest?          @relation(fields: [contestId], references: [id], onDelete: Cascade)
   content          String?
   mediaContent     String?
   type             String
+  isContestPost    Boolean           @default(false)
   userPostComments UserPostComment[]
   userPostLikes    UserPostLikes[]
+  contestPostVote  ContestPostVote[]
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
 
   @@map("userPosts")
 }
 
+model UserComment {
+  id               Int                    @id @default(autoincrement())
+  userId           Int
+  comment          String
+  mediaContent     String?
+  user             User                   @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  userPostComments UserPostComment[]
+  commentReply     UserPostCommentReply[] @relation("reply")
+  comments         UserPostCommentReply[] @relation("comment")
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+
+  @@map("usercomments")
+}
+
 model UserPostComment {
-  id        Int       @id @default(autoincrement())
-  postId    Int
-  userId    Int
-  comment   String
-  contest   UserPosts @relation(fields: [postId], onDelete: Cascade, references: [id])
-  user      User      @relation(fields: [userId], onDelete: Cascade, references: [id])
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id               Int                    @id @default(autoincrement())
+  postId           Int
+  commentId        Int                    @unique
+  userId           Int
+  post             UserPosts              @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userComment      UserComment            @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user             User                   @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  postCommentLikes UserPostCommentLikes[]
+  postCommentReply UserPostCommentReply[]
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
 
   @@map("userpostcomments")
+}
+
+model UserPostCommentReply {
+  id                    Int                         @id @default(autoincrement())
+  postCommentId         Int
+  commentReplyId        Int
+  commentId             Int
+  userId                Int
+  comment               String
+  postCommentReply      UserComment                 @relation(fields: [commentReplyId], references: [id], onUpdate: NoAction, onDelete: NoAction, name: "reply")
+  userPostComment       UserPostComment             @relation(fields: [postCommentId], references: [id], onDelete: Cascade)
+  postComment           UserComment                 @relation(fields: [commentId], references: [id], onUpdate: NoAction, onDelete: NoAction, name: "comment")
+  user                  User                        @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  userCommentReplyLikes UserPostCommentReplyLikes[]
+  createdAt             DateTime                    @default(now())
+  updatedAt             DateTime                    @updatedAt
+
+  @@map("userpostcommenttreply")
 }
 
 model UserPostLikes {
   id        Int       @id @default(autoincrement())
   postId    Int
   userId    Int
-  contest   UserPosts @relation(fields: [postId], onDelete: Cascade, references: [id])
-  user      User      @relation(fields: [userId], onDelete: Cascade, references: [id])
+  post      UserPosts @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
   @@map("userpostlikes")
 }
 
+model UserPostCommentLikes {
+  id            Int             @id @default(autoincrement())
+  postCommentId Int
+  userId        Int
+  postComment   UserPostComment @relation(fields: [postCommentId], references: [id], onDelete: Cascade)
+  user          User            @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@map("userpostcommentlikes")
+}
+
+model UserPostCommentReplyLikes {
+  id                 Int                  @id @default(autoincrement())
+  postCommentReplyId Int
+  userId             Int
+  postCommentReply   UserPostCommentReply @relation(fields: [postCommentReplyId], references: [id], onDelete: Cascade)
+  user               User                 @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+
+  @@map("userpostcommenttreplylikes")
+}
+
 model Contest {
-  id                 Int            @id @default(autoincrement())
+  id                 Int          @id @default(autoincrement())
   name               String
   amountWinning      Int
-  maxContestant      Int            @default(100)
-  noFreewildCards    Int            @default(2)
+  maxContestant      Int          @default(100)
+  noFreewildCards    Int          @default(2)
+  isCompetionOn      Boolean      @default(false)
   prize              Int
   category           String
-  duration           String         @default("3 Weeks")
-  durationExpiration BigInt
-  contestPosts       ContestPosts[]
-  createdAt          DateTime       @default(now())
-  updatedAt          DateTime       @updatedAt
+  duration           String       @default("3 Weeks")
+  durationExpiration String
+  contestPosts       UserPosts[]
+  contestants        Contestant[]
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
 
   @@map("contests")
 }
 
-model ContestPosts {
-  id                  Int                  @id @default(autoincrement())
-  contestId           Int
-  userId              Int
-  content             String
-  contest             Contest              @relation(fields: [contestId], onDelete: Cascade, references: [id])
-  user                User                 @relation(fields: [userId], onDelete: Cascade, references: [id])
-  contestPostComments ContestPostComment[]
-  contestPostLikes    ContestPostLikes[]
-  contestPostVotes    ContestPostVote[]
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
-
-  @@map("contestposts")
-}
-
-model ContestPostComment {
-  id            Int          @id @default(autoincrement())
-  contestPostId Int
-  userId        Int
-  comment       String
-  contest       ContestPosts @relation(fields: [contestPostId], onDelete: Cascade, references: [id])
-  user          User         @relation(fields: [userId], onDelete: Cascade, references: [id])
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-
-  @@map("contestpostcomments")
-}
-
-model ContestPostLikes {
-  id            Int          @id @default(autoincrement())
-  contestPostId Int
-  userId        Int
-  contest       ContestPosts @relation(fields: [contestPostId], onDelete: Cascade, references: [id])
-  user          User         @relation(fields: [userId], onDelete: Cascade, references: [id])
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-
-  @@map("contestpostlikes")
+model Contestant {
+  id             Int              @id @default(autoincrement())
+  contestId      Int
+  userId         Int
+  contest        Contest          @relation(fields: [contestId], references: [id], onDelete: Cascade)
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contestantVote ContestantVote[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
 }
 
 model ContestPostVote {
-  id            Int          @id @default(autoincrement())
+  id            Int       @id @default(autoincrement())
   contestPostId Int
   userId        Int
-  contest       ContestPosts @relation(fields: [contestPostId], onDelete: Cascade, references: [id])
-  user          User         @relation(fields: [userId], onDelete: Cascade, references: [id])
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  contestPost   UserPosts @relation(fields: [contestPostId], onDelete: Cascade, references: [id])
+  user          User      @relation(fields: [userId], onDelete: NoAction, onUpdate: NoAction, references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   @@map("contestpostvotes")
+}
+
+model ContestantVote {
+  id           Int        @id @default(autoincrement())
+  contestantId Int
+  Contestant   Contestant @relation(fields: [contestantId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@map("contestantvotes")
 }
