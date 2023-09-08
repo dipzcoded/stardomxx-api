@@ -1,15 +1,9 @@
 import { UserPosts } from "@prisma/client";
 import { ResponseStatusSignalEnum } from "../../../enums/v1";
-export interface getYourPostContents {
+export interface getPostContent {
   status: ResponseStatusSignalEnum;
   payload: UserPosts[];
 }
-
-export interface getFollowingContents {
-  status: ResponseStatusSignalEnum;
-  payload: UserPosts[];
-}
-
 export interface postContent {
   status: ResponseStatusSignalEnum;
   payload: UserPosts;

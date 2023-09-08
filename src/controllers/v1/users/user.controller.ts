@@ -335,7 +335,7 @@ class UserController implements UserControllerInterface {
         passwordResetToken: {
           create: {
             token: hashToken(passwordResetToken),
-            expirationinseconds: setPasswordResetTokenExpiresDate(),
+            expirationinseconds: String(setPasswordResetTokenExpiresDate()),
           },
         },
       },
@@ -383,7 +383,10 @@ class UserController implements UserControllerInterface {
       return;
     }
 
-    if (userWithToken.passwordResetToken?.expirationinseconds! > Date.now()) {
+    if (
+      Number(userWithToken.passwordResetToken?.expirationinseconds!) >
+      Date.now()
+    ) {
       let user = await prismaClient.user.update({
         where: {
           id: userWithToken.id,

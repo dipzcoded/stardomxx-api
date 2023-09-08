@@ -43,7 +43,6 @@ class ProfileController implements ProfileControllerInterface {
         nextOfKins: true,
         user: {
           include: {
-            contestPost: true,
             followers: true,
             userFollowing: true,
             posts: true,

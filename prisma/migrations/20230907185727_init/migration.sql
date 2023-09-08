@@ -144,7 +144,7 @@ CREATE TABLE [dbo].[userfollowering] (
 -- CreateTable
 CREATE TABLE [dbo].[userPosts] (
     [id] INT NOT NULL IDENTITY(1,1),
-    [userId] INT NOT NULL,
+    [userId] INT,
     [contestId] INT,
     [content] NVARCHAR(1000),
     [mediaContent] NVARCHAR(1000),
@@ -160,6 +160,7 @@ CREATE TABLE [dbo].[usercomments] (
     [id] INT NOT NULL IDENTITY(1,1),
     [userId] INT NOT NULL,
     [comment] NVARCHAR(1000) NOT NULL,
+    [mediaContent] NVARCHAR(1000),
     [createdAt] DATETIME2 NOT NULL CONSTRAINT [usercomments_createdAt_df] DEFAULT CURRENT_TIMESTAMP,
     [updatedAt] DATETIME2 NOT NULL,
     CONSTRAINT [usercomments_pkey] PRIMARY KEY CLUSTERED ([id])
@@ -171,10 +172,10 @@ CREATE TABLE [dbo].[userpostcomments] (
     [postId] INT NOT NULL,
     [commentId] INT NOT NULL,
     [userId] INT NOT NULL,
-    [comment] NVARCHAR(1000) NOT NULL,
     [createdAt] DATETIME2 NOT NULL CONSTRAINT [userpostcomments_createdAt_df] DEFAULT CURRENT_TIMESTAMP,
     [updatedAt] DATETIME2 NOT NULL,
-    CONSTRAINT [userpostcomments_pkey] PRIMARY KEY CLUSTERED ([id])
+    CONSTRAINT [userpostcomments_pkey] PRIMARY KEY CLUSTERED ([id]),
+    CONSTRAINT [userpostcomments_commentId_key] UNIQUE NONCLUSTERED ([commentId])
 );
 
 -- CreateTable
@@ -203,7 +204,7 @@ CREATE TABLE [dbo].[userpostlikes] (
 -- CreateTable
 CREATE TABLE [dbo].[userpostcommentlikes] (
     [id] INT NOT NULL IDENTITY(1,1),
-    [commentId] INT NOT NULL,
+    [postCommentId] INT NOT NULL,
     [userId] INT NOT NULL,
     [createdAt] DATETIME2 NOT NULL CONSTRAINT [userpostcommentlikes_createdAt_df] DEFAULT CURRENT_TIMESTAMP,
     [updatedAt] DATETIME2 NOT NULL,
@@ -213,9 +214,8 @@ CREATE TABLE [dbo].[userpostcommentlikes] (
 -- CreateTable
 CREATE TABLE [dbo].[userpostcommenttreplylikes] (
     [id] INT NOT NULL IDENTITY(1,1),
-    [commentReplyId] INT NOT NULL,
+    [postCommentReplyId] INT NOT NULL,
     [userId] INT NOT NULL,
-    [comment] NVARCHAR(1000) NOT NULL,
     [createdAt] DATETIME2 NOT NULL CONSTRAINT [userpostcommenttreplylikes_createdAt_df] DEFAULT CURRENT_TIMESTAMP,
     [updatedAt] DATETIME2 NOT NULL,
     CONSTRAINT [userpostcommenttreplylikes_pkey] PRIMARY KEY CLUSTERED ([id])
@@ -225,16 +225,28 @@ CREATE TABLE [dbo].[userpostcommenttreplylikes] (
 CREATE TABLE [dbo].[contests] (
     [id] INT NOT NULL IDENTITY(1,1),
     [name] NVARCHAR(1000) NOT NULL,
-    [amountWinning] INT NOT NULL,
     [maxContestant] INT NOT NULL CONSTRAINT [contests_maxContestant_df] DEFAULT 100,
-    [noFreewildCards] INT NOT NULL CONSTRAINT [contests_noFreewildCards_df] DEFAULT 2,
+    [noFreeWildCards] INT NOT NULL CONSTRAINT [contests_noFreeWildCards_df] DEFAULT 2,
+    [isCompetitionOn] BIT NOT NULL CONSTRAINT [contests_isCompetitionOn_df] DEFAULT 0,
+    [isOpenForEntry] BIT NOT NULL CONSTRAINT [contests_isOpenForEntry_df] DEFAULT 1,
     [prize] INT NOT NULL,
     [category] NVARCHAR(1000) NOT NULL,
-    [duration] NVARCHAR(1000) NOT NULL CONSTRAINT [contests_duration_df] DEFAULT '3 Weeks',
+    [startDate] DATETIME2 NOT NULL,
+    [endDate] DATETIME2 NOT NULL,
     [durationExpiration] NVARCHAR(1000) NOT NULL,
     [createdAt] DATETIME2 NOT NULL CONSTRAINT [contests_createdAt_df] DEFAULT CURRENT_TIMESTAMP,
     [updatedAt] DATETIME2 NOT NULL,
     CONSTRAINT [contests_pkey] PRIMARY KEY CLUSTERED ([id])
+);
+
+-- CreateTable
+CREATE TABLE [dbo].[Contestant] (
+    [id] INT NOT NULL IDENTITY(1,1),
+    [contestId] INT NOT NULL,
+    [userId] INT NOT NULL,
+    [createdAt] DATETIME2 NOT NULL CONSTRAINT [Contestant_createdAt_df] DEFAULT CURRENT_TIMESTAMP,
+    [updatedAt] DATETIME2 NOT NULL,
+    CONSTRAINT [Contestant_pkey] PRIMARY KEY CLUSTERED ([id])
 );
 
 -- CreateTable
@@ -245,6 +257,15 @@ CREATE TABLE [dbo].[contestpostvotes] (
     [createdAt] DATETIME2 NOT NULL CONSTRAINT [contestpostvotes_createdAt_df] DEFAULT CURRENT_TIMESTAMP,
     [updatedAt] DATETIME2 NOT NULL,
     CONSTRAINT [contestpostvotes_pkey] PRIMARY KEY CLUSTERED ([id])
+);
+
+-- CreateTable
+CREATE TABLE [dbo].[contestantvotes] (
+    [id] INT NOT NULL IDENTITY(1,1),
+    [contestantId] INT NOT NULL,
+    [createdAt] DATETIME2 NOT NULL CONSTRAINT [contestantvotes_createdAt_df] DEFAULT CURRENT_TIMESTAMP,
+    [updatedAt] DATETIME2 NOT NULL,
+    CONSTRAINT [contestantvotes_pkey] PRIMARY KEY CLUSTERED ([id])
 );
 
 -- CreateTable
@@ -325,22 +346,31 @@ ALTER TABLE [dbo].[userpostlikes] ADD CONSTRAINT [userpostlikes_postId_fkey] FOR
 ALTER TABLE [dbo].[userpostlikes] ADD CONSTRAINT [userpostlikes_userId_fkey] FOREIGN KEY ([userId]) REFERENCES [dbo].[user]([id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE [dbo].[userpostcommentlikes] ADD CONSTRAINT [userpostcommentlikes_commentId_fkey] FOREIGN KEY ([commentId]) REFERENCES [dbo].[userpostcomments]([id]) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE [dbo].[userpostcommentlikes] ADD CONSTRAINT [userpostcommentlikes_postCommentId_fkey] FOREIGN KEY ([postCommentId]) REFERENCES [dbo].[userpostcomments]([id]) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE [dbo].[userpostcommentlikes] ADD CONSTRAINT [userpostcommentlikes_userId_fkey] FOREIGN KEY ([userId]) REFERENCES [dbo].[user]([id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE [dbo].[userpostcommenttreplylikes] ADD CONSTRAINT [userpostcommenttreplylikes_commentReplyId_fkey] FOREIGN KEY ([commentReplyId]) REFERENCES [dbo].[userpostcommenttreply]([id]) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE [dbo].[userpostcommenttreplylikes] ADD CONSTRAINT [userpostcommenttreplylikes_postCommentReplyId_fkey] FOREIGN KEY ([postCommentReplyId]) REFERENCES [dbo].[userpostcommenttreply]([id]) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE [dbo].[userpostcommenttreplylikes] ADD CONSTRAINT [userpostcommenttreplylikes_userId_fkey] FOREIGN KEY ([userId]) REFERENCES [dbo].[user]([id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE [dbo].[Contestant] ADD CONSTRAINT [Contestant_contestId_fkey] FOREIGN KEY ([contestId]) REFERENCES [dbo].[contests]([id]) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE [dbo].[Contestant] ADD CONSTRAINT [Contestant_userId_fkey] FOREIGN KEY ([userId]) REFERENCES [dbo].[user]([id]) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE [dbo].[contestpostvotes] ADD CONSTRAINT [contestpostvotes_contestPostId_fkey] FOREIGN KEY ([contestPostId]) REFERENCES [dbo].[userPosts]([id]) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE [dbo].[contestpostvotes] ADD CONSTRAINT [contestpostvotes_userId_fkey] FOREIGN KEY ([userId]) REFERENCES [dbo].[user]([id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE [dbo].[contestantvotes] ADD CONSTRAINT [contestantvotes_contestantId_fkey] FOREIGN KEY ([contestantId]) REFERENCES [dbo].[Contestant]([id]) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE [dbo].[_Followers] ADD CONSTRAINT [_Followers_A_fkey] FOREIGN KEY ([A]) REFERENCES [dbo].[user]([id]) ON DELETE CASCADE ON UPDATE CASCADE;

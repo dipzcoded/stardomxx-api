@@ -8,9 +8,12 @@ import {
   cloudinaryV2,
   UserLoggedInRequest,
 } from "../../../utils/v1";
-import { PostContentBodyDto } from "../../../dtos/v1/posts";
-import { QueryPaginationDTO } from "../../../dtos/v1/query";
-import { PostIdParamDto } from "../../../dtos/v1/param";
+import {
+  PostContentBodyDto,
+  GetOwnContentPostQueryDto,
+} from "../../../dtos/v1/posts";
+import { SearchAndPaginationQueryDto } from "../../../dtos/v1/query";
+import { IdParamDto, PostIdParamDto } from "../../../dtos/v1/param";
 import {
   ResponseStatusCodeEnum,
   ResponseStatusSignalEnum,
@@ -18,43 +21,56 @@ import {
 import {
   BadRequestError,
   ForbiddenError,
+  InvalidRequestError,
   NotFoundError,
 } from "../../../classes/error";
 import fs from "graceful-fs";
 import { PathLike } from "fs";
 import { PostContentType } from "../../../enums/v1/post";
-import { ParamsDictionary } from "express-serve-static-core";
-import { ParsedQs } from "qs";
 
 class PostsController implements PostControllerInterface {
-  postVideoForContest(
-    req: Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>,
-    res: Response<any, Record<string, any>>,
-    next: NextFunction
-  ): Promise<void> {
-    throw new Error("Method not implemented.");
-  }
-  getOnGoingContestPost(
-    req: Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>,
-    res: Response<any, Record<string, any>>,
-    next: NextFunction
-  ): Promise<void> {
-    throw new Error("Method not implemented.");
-  }
-  async getYourPostContents(
-    req: Request<{}, any, any, QueryPaginationDTO, Record<string, any>>,
+  async getOnGoingContestPost(
+    req: Request<
+      {},
+      any,
+      any,
+      SearchAndPaginationQueryDto,
+      Record<string, any>
+    >,
     res: Response<
-      PostControllerInterfaceResponse.getYourPostContents,
+      PostControllerInterfaceResponse.getPostContent,
       Record<string, any>
     >,
     next: NextFunction
   ): Promise<void> {
     const { page, perPage } = req.query;
-    const offSet = (page - 1) * perPage;
     const customRequest = req as UserLoggedInRequest;
-    const userPosts = await prismaClient.userPosts.findMany({
+    const offSet = (page - 1) * perPage;
+    let onGoingContestPost = await prismaClient.userPosts.findMany({
       where: {
-        userId: customRequest.user.id,
+        OR: [
+          {
+            isContestPost: true,
+          },
+          {
+            isContestPost: true,
+            user: {
+              userFollowing: {
+                every: {
+                  userFollowing: {
+                    every: {
+                      id: {
+                        not: {
+                          equals: customRequest.user.id,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        ],
       },
       skip: offSet,
       take: perPage,
@@ -65,6 +81,69 @@ class PostsController implements PostControllerInterface {
       },
     });
 
+    onGoingContestPost = onGoingContestPost.map((el) => {
+      // @ts-ignore
+      delete el.user?.password;
+
+      return el;
+    });
+
+    res.status(ResponseStatusCodeEnum.OK).json({
+      status: ResponseStatusSignalEnum.SUCCESS,
+      payload: onGoingContestPost,
+    });
+  }
+
+  async getYourPostContents(
+    req: Request<{}, any, any, GetOwnContentPostQueryDto, Record<string, any>>,
+    res: Response<
+      PostControllerInterfaceResponse.getPostContent,
+      Record<string, any>
+    >,
+    next: NextFunction
+  ): Promise<void> {
+    const { page, perPage, findContestPost } = req.query;
+
+    const offSet = (page - 1) * perPage;
+    const customRequest = req as UserLoggedInRequest;
+    let userPosts;
+
+    if (findContestPost) {
+      let isContestPost = JSON.parse(findContestPost) as boolean;
+      userPosts = await prismaClient.userPosts.findMany({
+        where: {
+          userId: customRequest.user.id,
+          isContestPost,
+        },
+        skip: offSet,
+        take: perPage,
+        include: {
+          user: true,
+          userPostComments: true,
+          userPostLikes: true,
+        },
+      });
+    } else {
+      userPosts = await prismaClient.userPosts.findMany({
+        where: {
+          userId: customRequest.user.id,
+        },
+        skip: offSet,
+        take: perPage,
+        include: {
+          user: true,
+          userPostComments: true,
+          userPostLikes: true,
+        },
+      });
+    }
+
+    userPosts = userPosts.map((el) => {
+      // @ts-ignore
+      delete el.user?.password;
+      return el;
+    });
+
     res.status(ResponseStatusCodeEnum.OK).json({
       status: ResponseStatusSignalEnum.SUCCESS,
       payload: userPosts,
@@ -72,9 +151,15 @@ class PostsController implements PostControllerInterface {
   }
 
   async getFollowingContents(
-    req: Request<{}, any, any, QueryPaginationDTO, Record<string, any>>,
+    req: Request<
+      {},
+      any,
+      any,
+      SearchAndPaginationQueryDto,
+      Record<string, any>
+    >,
     res: Response<
-      PostControllerInterfaceResponse.getFollowingContents,
+      PostControllerInterfaceResponse.getPostContent,
       Record<string, any>
     >,
     next: NextFunction
@@ -82,11 +167,11 @@ class PostsController implements PostControllerInterface {
     const customRequest = req as UserLoggedInRequest;
     const { page, perPage } = req.query;
     const offSet = (page - 1) * perPage;
-    const userFollowingPosts = await prismaClient.userPosts.findMany({
+    let userFollowingPosts = await prismaClient.userPosts.findMany({
       where: {
         user: {
           userFollowing: {
-            some: {
+            every: {
               userFollowing: {
                 every: {
                   id: {
@@ -103,9 +188,17 @@ class PostsController implements PostControllerInterface {
       skip: offSet,
       take: perPage,
       include: {
+        user: true,
         userPostComments: true,
         userPostLikes: true,
       },
+    });
+
+    userFollowingPosts = userFollowingPosts.map((el) => {
+      // @ts-ignore
+      delete el.user?.password;
+
+      return el;
     });
 
     res.status(ResponseStatusCodeEnum.OK).json({
@@ -293,6 +386,241 @@ class PostsController implements PostControllerInterface {
     res.status(ResponseStatusCodeEnum.OK).json({
       status: ResponseStatusSignalEnum.SUCCESS,
       payload: post,
+    });
+  }
+
+  async postVideoForContestEntry(
+    req: Request<IdParamDto, any, PostContentBodyDto, {}, Record<string, any>>,
+    res: Response<
+      PostControllerInterfaceResponse.postContent,
+      Record<string, any>
+    >,
+    next: NextFunction
+  ): Promise<void> {
+    const { id: contestId } = req.params;
+    const { content } = req.body;
+    const customRequest = req as UserLoggedInRequest;
+
+    if (customRequest.files === undefined || !customRequest.files.length) {
+      next(new BadRequestError("a file must be uploaded"));
+      return;
+    }
+    const contest = await prismaClient.contest.findFirst({
+      where: {
+        id: contestId,
+      },
+    });
+
+    if (!contest) {
+      next(new NotFoundError("contest not found"));
+      return;
+    }
+
+    if (Number(contest.durationExpiration) < Date.now()) {
+      next(new InvalidRequestError("contest is not longer running"));
+      return;
+    }
+
+    if (!contest.isOpenForEntry) {
+      next(
+        new InvalidRequestError(
+          "contest is not longer avaliable for more entries"
+        )
+      );
+      return;
+    }
+
+    const isContestantAppliedForContest =
+      await prismaClient.contestant.findFirst({
+        where: {
+          contestId: contest.id,
+          userId: customRequest.user.id,
+        },
+      });
+
+    if (!isContestantAppliedForContest) {
+      next(
+        new ForbiddenError("Cannot post to an ongoing contest you didnt join")
+      );
+      return;
+    }
+
+    const files = req.files as Express.Multer.File[];
+    let mediaContent = "";
+    const filePath = files[0]["path"] as PathLike;
+    const fileName = files[0]["filename"];
+
+    try {
+      fs.open(filePath, "r", (openErr, fd) => {
+        if (openErr) {
+          throw openErr;
+        }
+
+        fs.close(fd, (closeErr) => {
+          if (closeErr) {
+            throw closeErr;
+          }
+
+          cloudinaryV2.uploader.upload(
+            filePath.toString(),
+            {
+              resource_type: "raw",
+              folder: "storgae/upload/",
+              public_id: fileName,
+              use_filename: true,
+              unique_filename: false,
+            },
+            async (cloudErr, result) => {
+              if (cloudErr) {
+                throw cloudErr;
+              }
+
+              mediaContent = result!.secure_url;
+
+              fs.unlink(filePath, (unlinkErr) => {
+                if (unlinkErr) {
+                  throw unlinkErr;
+                }
+              });
+            }
+          );
+        });
+      });
+    } catch (error) {
+      next(error);
+      return;
+    }
+
+    const contestPost = await prismaClient.userPosts.create({
+      data: {
+        type: PostContentType.VIDEO_CONTENT_UPLOAD,
+        contestId,
+        userId: customRequest.user.id,
+        mediaContent,
+        content,
+        isContestPost: true,
+      },
+    });
+
+    res.status(ResponseStatusCodeEnum.CREATED).json({
+      status: ResponseStatusSignalEnum.SUCCESS,
+      payload: contestPost,
+    });
+  }
+
+  async postVideoForCompetitionContest(
+    req: Request<IdParamDto, any, PostContentBodyDto, {}, Record<string, any>>,
+    res: Response<any, Record<string, any>>,
+    next: NextFunction
+  ): Promise<void> {
+    const { id: contestId } = req.params;
+    const { content } = req.body;
+    const customRequest = req as UserLoggedInRequest;
+
+    if (customRequest.files === undefined || !customRequest.files.length) {
+      next(new BadRequestError("a file must be uploaded"));
+      return;
+    }
+    const contest = await prismaClient.contest.findFirst({
+      where: {
+        id: contestId,
+      },
+    });
+
+    if (!contest) {
+      next(new NotFoundError("contest not found"));
+      return;
+    }
+
+    if (Number(contest.durationExpiration) < Date.now()) {
+      next(new InvalidRequestError("contest is not longer running"));
+      return;
+    }
+
+    if (!contest.isCompetitionOn) {
+      next(
+        new InvalidRequestError(
+          "contest is avaliable for more entries so can post for the main competition"
+        )
+      );
+      return;
+    }
+
+    const isContestantAppliedForContest =
+      await prismaClient.contestant.findFirst({
+        where: {
+          contestId: contest.id,
+          userId: customRequest.user.id,
+        },
+      });
+
+    if (!isContestantAppliedForContest) {
+      next(
+        new ForbiddenError("Cannot post to an ongoing contest you didnt join")
+      );
+      return;
+    }
+
+    const files = req.files as Express.Multer.File[];
+    let mediaContent = "";
+    const filePath = files[0]["path"] as PathLike;
+    const fileName = files[0]["filename"];
+
+    try {
+      fs.open(filePath, "r", (openErr, fd) => {
+        if (openErr) {
+          throw openErr;
+        }
+
+        fs.close(fd, (closeErr) => {
+          if (closeErr) {
+            throw closeErr;
+          }
+
+          cloudinaryV2.uploader.upload(
+            filePath.toString(),
+            {
+              resource_type: "raw",
+              folder: "storgae/upload/",
+              public_id: fileName,
+              use_filename: true,
+              unique_filename: false,
+            },
+            async (cloudErr, result) => {
+              if (cloudErr) {
+                throw cloudErr;
+              }
+
+              mediaContent = result!.secure_url;
+
+              fs.unlink(filePath, (unlinkErr) => {
+                if (unlinkErr) {
+                  throw unlinkErr;
+                }
+              });
+            }
+          );
+        });
+      });
+    } catch (error) {
+      next(error);
+      return;
+    }
+
+    const contestPost = await prismaClient.userPosts.create({
+      data: {
+        type: PostContentType.VIDEO_CONTENT_UPLOAD,
+        contestId,
+        userId: customRequest.user.id,
+        mediaContent,
+        content,
+        isContestPost: true,
+      },
+    });
+
+    res.status(ResponseStatusCodeEnum.CREATED).json({
+      status: ResponseStatusSignalEnum.SUCCESS,
+      payload: contestPost,
     });
   }
 

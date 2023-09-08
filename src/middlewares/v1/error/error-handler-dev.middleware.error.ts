@@ -15,32 +15,22 @@ export default (
   next: NextFunction
 ) => {
   if (req.files !== undefined && req.files.length) {
-    // @ts-ignore
-    const filePath = req.files[0]["path"] as PathLike;
-    fs.access(filePath, fs.constants.F_OK, (err) => {
-      if (err) {
-        if (err.code === "ENOENT") {
-          return res.status(ResponseStatusCodeEnum.NOT_FOUND).json({
-            status: ResponseStatusSignalEnum.FAILED,
-            errors: [
-              {
-                message: "File does not exist",
-              },
-            ],
-          });
-        } else {
-          return res.status(ResponseStatusCodeEnum.SERVER_ERROR).json({
-            status: ResponseStatusSignalEnum.FAILED,
-            errors: [
-              {
-                message: err.message,
-              },
-            ],
-          });
-        }
-      } else {
-        fs.unlink(filePath, (err) => {
-          if (err) {
+    const files = req.files as Express.Multer.File[];
+    for (let i = 0; i < files.length; i++) {
+      const filePath = files[i]["path"] as PathLike;
+
+      fs.access(filePath, fs.constants.F_OK, (err) => {
+        if (err) {
+          if (err.code === "ENOENT") {
+            return res.status(ResponseStatusCodeEnum.NOT_FOUND).json({
+              status: ResponseStatusSignalEnum.FAILED,
+              errors: [
+                {
+                  message: "File does not exist",
+                },
+              ],
+            });
+          } else {
             return res.status(ResponseStatusCodeEnum.SERVER_ERROR).json({
               status: ResponseStatusSignalEnum.FAILED,
               errors: [
@@ -50,10 +40,23 @@ export default (
               ],
             });
           }
-          return;
-        });
-      }
-    });
+        } else {
+          fs.unlink(filePath, (err) => {
+            if (err) {
+              return res.status(ResponseStatusCodeEnum.SERVER_ERROR).json({
+                status: ResponseStatusSignalEnum.FAILED,
+                errors: [
+                  {
+                    message: err.message,
+                  },
+                ],
+              });
+            }
+            return;
+          });
+        }
+      });
+    }
   }
 
   if (err instanceof CustomError) {

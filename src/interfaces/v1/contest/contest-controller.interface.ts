@@ -1,47 +1,37 @@
 import { Request, Response, NextFunction } from "express";
 
-export interface PostControllerInterface {
-  getYourPostContents(
+export interface ContestControllerInterface {
+  adminGetAllContests(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<void>;
-  getFollowingContents(
+  adminCreateAContest(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<void>;
-  postImageContent(
+  adminUpdateContest(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<void>;
-  postVideoContent(
+  adminDeleteContest(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<void>;
-  postTextContent(
+  userJoiningAContest(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<void>;
-  deleteYourPostContent(
+  userGettingAllJoinedContest(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<void>;
-  postVideoForContestEntry(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void>;
-  postVideoForCompetitionContest(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void>;
-  getOnGoingContestPost(
+  adminRemoveContestantFromContest(
     req: Request,
     res: Response,
     next: NextFunction
