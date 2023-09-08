@@ -188,7 +188,8 @@ CREATE TABLE [dbo].[userpostcommenttreply] (
     [comment] NVARCHAR(1000) NOT NULL,
     [createdAt] DATETIME2 NOT NULL CONSTRAINT [userpostcommenttreply_createdAt_df] DEFAULT CURRENT_TIMESTAMP,
     [updatedAt] DATETIME2 NOT NULL,
-    CONSTRAINT [userpostcommenttreply_pkey] PRIMARY KEY CLUSTERED ([id])
+    CONSTRAINT [userpostcommenttreply_pkey] PRIMARY KEY CLUSTERED ([id]),
+    CONSTRAINT [userpostcommenttreply_commentReplyId_key] UNIQUE NONCLUSTERED ([commentReplyId])
 );
 
 -- CreateTable

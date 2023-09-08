@@ -36,4 +36,10 @@ export interface CommentPostControllerInterface {
     res: Response,
     next: NextFunction
   ): Promise<void>;
+
+  deleteReplyOnComment(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void>;
 }

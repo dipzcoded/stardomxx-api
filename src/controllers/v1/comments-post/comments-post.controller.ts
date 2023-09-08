@@ -14,6 +14,7 @@ import {
   CommentDTO,
   CommentIdParamDto,
   CommentPostIdDto,
+  DeleteCommentReplyId,
 } from "../../../dtos/v1/comments-post";
 import { BadRequestError, NotFoundError } from "../../../classes/error";
 
@@ -246,7 +247,7 @@ class CommentsPostController implements CommentPostControllerInterface {
   async deleteCommentOnPost(
     req: Request<CommentPostIdDto, any, any, {}, Record<string, any>>,
     res: Response<
-      CommentPostResponseInterface.deletePostComment,
+      CommentPostResponseInterface.deletePostCommentAndReplyComment,
       Record<string, any>
     >,
     next: NextFunction
@@ -301,6 +302,72 @@ class CommentsPostController implements CommentPostControllerInterface {
     res.status(ResponseStatusCodeEnum.OK).json({
       status: ResponseStatusSignalEnum.SUCCESS,
       payload: "comment deleted successfully!",
+    });
+  }
+
+  async deleteReplyOnComment(
+    req: Request<DeleteCommentReplyId, any, any, {}, Record<string, any>>,
+    res: Response<
+      CommentPostResponseInterface.deletePostCommentAndReplyComment,
+      Record<string, any>
+    >,
+    next: NextFunction
+  ): Promise<void> {
+    const { commentId, commentReplyId } = req.params;
+
+    const customRequest = req as UserLoggedInRequest;
+
+    const comment = await prismaClient.userComment.findFirst({
+      where: {
+        id: commentId,
+        userId: customRequest.user.id,
+      },
+    });
+
+    if (!comment) {
+      next(new NotFoundError("comment not found"));
+      return;
+    }
+
+    const postComment = await prismaClient.userPostComment.findUnique({
+      where: {
+        commentId: comment.id,
+      },
+    });
+
+    if (!postComment) {
+      next(new NotFoundError("comment not found a post"));
+      return;
+    }
+
+    const commentAsReplyFound =
+      await prismaClient.userPostCommentReply.findFirst({
+        where: {
+          commentReplyId,
+          commentId,
+        },
+      });
+
+    if (!commentAsReplyFound) {
+      next(new NotFoundError("reply not found"));
+      return;
+    }
+
+    await prismaClient.userComment.delete({
+      where: {
+        id: commentAsReplyFound.commentId,
+      },
+    });
+
+    await prismaClient.userPostCommentReply.delete({
+      where: {
+        id: commentAsReplyFound.id,
+      },
+    });
+
+    res.status(ResponseStatusCodeEnum.OK).json({
+      status: ResponseStatusSignalEnum.SUCCESS,
+      payload: "reply on a comment is deleted successfully!",
     });
   }
 }

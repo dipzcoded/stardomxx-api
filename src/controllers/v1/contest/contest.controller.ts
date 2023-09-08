@@ -17,6 +17,7 @@ import {
 } from "../../../enums/v1";
 import { IdParamDto } from "../../../dtos/v1/param";
 import {
+  BadRequestError,
   ForbiddenError,
   InvalidRequestError,
   NotFoundError,
@@ -104,8 +105,16 @@ class ContestController implements ContestControllerInterface {
       startDate,
     } = req.body;
 
+    const startDateMilliSeconds = startDate.getTime();
+    const endDateMilliSeconds = endDate.getTime();
+
+    if (startDateMilliSeconds > endDateMilliSeconds) {
+      next(new BadRequestError("start date is greater than the end date"));
+      return;
+    }
+
     const expirationDuration =
-      endDate.getUTCMilliseconds() - startDate.getUTCMilliseconds();
+      (endDateMilliSeconds - startDateMilliSeconds) * 1000;
 
     const newContest = await prismaClient.contest.create({
       data: {
@@ -156,8 +165,16 @@ class ContestController implements ContestControllerInterface {
     }
 
     const isCompetitionOn = contest.isCompetitionOn;
-    const durationExpiration =
-      endDate.getUTCMilliseconds() - startDate.getUTCMilliseconds();
+
+    const startDateMilliSeconds = startDate.getTime();
+    const endDateMilliSeconds = endDate.getTime();
+
+    if (startDateMilliSeconds > endDateMilliSeconds) {
+      next(new BadRequestError("start date is greater than the end date"));
+      return;
+    }
+
+    const durationExpiration = (endDate.getTime() - startDate.getTime()) * 1000;
 
     const updatedContest = await prismaClient.contest.update({
       where: {

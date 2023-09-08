@@ -11,7 +11,7 @@ export interface createAndUpdatePostComment {
   payload: UserPostComment;
 }
 
-export interface deletePostComment {
+export interface deletePostCommentAndReplyComment {
   status: ResponseStatusSignalEnum;
   payload: string;
 }

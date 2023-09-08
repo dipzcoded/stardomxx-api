@@ -38,6 +38,7 @@ model User {
   commentReply          UserPostCommentReply[]
   userCommentReplyLikes UserPostCommentReplyLikes[]
   contestant            Contestant[]
+  contestantVote        ContestantVote[]
   secretQuestion        UserSecretQuestion?
   createdAt             DateTime                    @default(now())
   updatedAt             DateTime                    @updatedAt
@@ -220,7 +221,7 @@ model UserPostComment {
 model UserPostCommentReply {
   id                    Int                         @id @default(autoincrement())
   postCommentId         Int
-  commentReplyId        Int
+  commentReplyId        Int                         @unique
   commentId             Int
   userId                Int
   comment               String
@@ -317,7 +318,9 @@ model ContestPostVote {
 model ContestantVote {
   id           Int        @id @default(autoincrement())
   contestantId Int
-  Contestant   Contestant @relation(fields: [contestantId], references: [id], onDelete: Cascade)
+  contestant   Contestant @relation(fields: [contestantId], references: [id], onDelete: Cascade)
+  userId       Int
+  user         User       @relation(fields: [userId], onDelete: NoAction, onUpdate: NoAction, references: [id])
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 
