@@ -24,7 +24,7 @@ import {
 } from "../../../classes/error";
 
 class ContestController implements ContestControllerInterface {
-  async adminGetAllContests(
+  async getAllContests(
     req: Request<{}, any, any, GetContestPostQuery, Record<string, any>>,
     res: Response<
       ContestControllerResponseInterface.GetAllContest,

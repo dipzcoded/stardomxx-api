@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 
 export interface ContestControllerInterface {
-  adminGetAllContests(
+  getAllContests(
     req: Request,
     res: Response,
     next: NextFunction

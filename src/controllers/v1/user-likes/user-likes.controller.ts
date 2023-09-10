@@ -5,7 +5,7 @@ import {
 } from "../../../interfaces/v1/user-likes";
 import { UserLoggedInRequest } from "../../../utils/v1";
 import { prismaClient } from "../../../utils/v1";
-import { QueryPaginationDTO } from "../../../dtos/v1/query";
+import { SearchAndPaginationQueryDto } from "../../../dtos/v1/query";
 import { PostIdParamDto, IdParamDto } from "../../../dtos/v1/param";
 import {
   CommentPostIdDto,
@@ -21,7 +21,13 @@ class UserLikesController
   implements UserLikesPostAndCommentControllerInterface
 {
   async userGetLikesPost(
-    req: Request<{}, any, any, QueryPaginationDTO, Record<string, any>>,
+    req: Request<
+      {},
+      any,
+      any,
+      SearchAndPaginationQueryDto,
+      Record<string, any>
+    >,
     res: Response<UserLikesResponseInterface.getPostLikes, Record<string, any>>,
     next: NextFunction
   ): Promise<void> {

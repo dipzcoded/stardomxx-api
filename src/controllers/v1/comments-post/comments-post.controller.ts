@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { QueryPaginationDTO } from "../../../dtos/v1/query";
+import { SearchAndPaginationQueryDto } from "../../../dtos/v1/query";
 import {
   CommentPostControllerInterface,
   CommentPostResponseInterface,
@@ -20,7 +20,13 @@ import { BadRequestError, NotFoundError } from "../../../classes/error";
 
 class CommentsPostController implements CommentPostControllerInterface {
   async getYourAllCommentsOnPosts(
-    req: Request<{}, any, any, QueryPaginationDTO, Record<string, any>>,
+    req: Request<
+      {},
+      any,
+      any,
+      SearchAndPaginationQueryDto,
+      Record<string, any>
+    >,
     res: Response<
       CommentPostResponseInterface.getPostComments,
       Record<string, any>
@@ -30,7 +36,7 @@ class CommentsPostController implements CommentPostControllerInterface {
     const { page, perPage } = req.query;
     const offSet = (page - 1) * perPage;
     const customRequest = req as UserLoggedInRequest;
-    const userComments = await prismaClient.userPostComment.findMany({
+    let userComments = await prismaClient.userPostComment.findMany({
       where: {
         userId: customRequest.user.id,
       },
@@ -45,6 +51,12 @@ class CommentsPostController implements CommentPostControllerInterface {
       },
     });
 
+    userComments = userComments.map((el) => {
+      // @ts-ignore
+      delete el.user.password;
+      return el;
+    });
+
     res.status(ResponseStatusCodeEnum.OK).json({
       status: ResponseStatusSignalEnum.SUCCESS,
       payload: userComments,
@@ -55,7 +67,7 @@ class CommentsPostController implements CommentPostControllerInterface {
       PostIdParamDto,
       any,
       any,
-      QueryPaginationDTO,
+      SearchAndPaginationQueryDto,
       Record<string, any>
     >,
     res: Response<
@@ -68,7 +80,7 @@ class CommentsPostController implements CommentPostControllerInterface {
     const { page, perPage } = req.query;
     const offSet = (page - 1) * perPage;
 
-    const postComments = await prismaClient.userPostComment.findMany({
+    let postComments = await prismaClient.userPostComment.findMany({
       where: {
         postId,
       },
@@ -83,9 +95,59 @@ class CommentsPostController implements CommentPostControllerInterface {
       },
     });
 
+    postComments = postComments.map((el) => {
+      // @ts-ignore
+      delete el.user.password;
+      return el;
+    });
+
     res.status(ResponseStatusCodeEnum.OK).json({
       status: ResponseStatusSignalEnum.SUCCESS,
       payload: postComments,
+    });
+  }
+
+  async getRepliesOnCommentId(
+    req: Request<
+      CommentIdParamDto,
+      any,
+      any,
+      SearchAndPaginationQueryDto,
+      Record<string, any>
+    >,
+    res: Response<
+      CommentPostResponseInterface.getCommentReplies,
+      Record<string, any>
+    >,
+    next: NextFunction
+  ): Promise<void> {
+    const { commentId } = req.params;
+    const { page, perPage } = req.query;
+    const offSet = (page - 1) * perPage;
+    // const customRequest = req as UserLoggedInRequest;
+    let commentReplies = await prismaClient.userPostCommentReply.findMany({
+      where: {
+        commentId,
+      },
+      skip: offSet,
+      take: perPage,
+      orderBy: {
+        updatedAt: "asc",
+      },
+      include: {
+        user: true,
+      },
+    });
+
+    commentReplies = commentReplies.map((el) => {
+      // @ts-ignore
+      delete el.user.password;
+      return el;
+    });
+
+    res.status(ResponseStatusCodeEnum.OK).json({
+      status: ResponseStatusSignalEnum.SUCCESS,
+      payload: commentReplies,
     });
   }
   async createCommentOnPost(

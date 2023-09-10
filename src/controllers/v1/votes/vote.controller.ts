@@ -3,7 +3,7 @@ import {
   VoteResponseControllerInterface,
   VotesControllerInterface,
 } from "../../../interfaces/v1/votes";
-import { IdParamDto } from "../../../dtos/v1/param";
+
 import { UserLoggedInRequest, prismaClient } from "../../../utils/v1";
 import {
   ForbiddenError,

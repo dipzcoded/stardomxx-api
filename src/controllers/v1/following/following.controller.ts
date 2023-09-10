@@ -18,12 +18,12 @@ import {
 
 class FollowingController implements FollowingControllerInterface {
   async unFollowFollowing(
-    req: Request<{}, any, any, {}, Record<string, any>>,
+    req: Request<UserIdParamDTO, any, any, {}, Record<string, any>>,
     res: Response<FollowingResponse, Record<string, any>>,
     next: NextFunction
   ): Promise<void> {
+    const { userId } = req.params;
     const customRequest = req as UserLoggedInRequest;
-    const { userId } = customRequest.params;
 
     // checking if user exist
     const userExist = await prismaClient.user.findUnique({
@@ -92,12 +92,12 @@ class FollowingController implements FollowingControllerInterface {
     }
   }
   async followUser(
-    req: Request<{}, any, any, {}, Record<string, any>>,
+    req: Request<UserIdParamDTO, any, any, {}, Record<string, any>>,
     res: Response<FollowingResponse, Record<string, any>>,
     next: NextFunction
   ): Promise<void> {
+    const { userId } = req.params;
     const customRequest = req as UserLoggedInRequest;
-    const { userId } = customRequest.params;
 
     const userExist = await prismaClient.user.findUnique({
       where: {
@@ -218,12 +218,13 @@ class FollowingController implements FollowingControllerInterface {
     });
   }
   async unfollowFollower(
-    req: Request<{}, any, any, {}, Record<string, any>>,
+    req: Request<UserIdParamDTO, any, any, {}, Record<string, any>>,
     res: Response<FollowingResponse, Record<string, any>>,
     next: NextFunction
   ): Promise<void> {
+    const { userId } = req.params;
     const customRequest = req as UserLoggedInRequest;
-    const { userId } = customRequest.params;
+   
 
     // check if user exist
 

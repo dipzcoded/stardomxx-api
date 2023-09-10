@@ -9,6 +9,7 @@ import {
 } from "../../../middlewares/v1/validator/users";
 import { requestValidationMiddleware } from "../../../middlewares/v1/validator";
 import { requiresAuthMiddleware } from "../../../middlewares/v1/auth";
+import { uploadImageStorage } from "../../../middlewares/v1/upload";
 const userController = new UserController();
 
 // non protected routes
@@ -49,5 +50,13 @@ router
 router
   .route("/current-user")
   .get(requiresAuthMiddleware, userController.getCurrentLoggedInUser);
+
+router
+  .route("/profile-picture/upload")
+  .patch(
+    requiresAuthMiddleware,
+    uploadImageStorage.any(),
+    userController.uploadProfilePicture
+  );
 
 export default router;

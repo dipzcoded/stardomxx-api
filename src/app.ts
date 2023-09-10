@@ -1,5 +1,15 @@
 import express, { NextFunction, Request, Response } from "express";
-import { userRoute, profileRoute, followRoute } from "./routes/v1";
+import {
+  userRoute,
+  profileRoute,
+  followRoute,
+  commentRoute,
+  contestRoute,
+  postRoute,
+  userLikeRoute,
+  voteRoute,
+} from "./routes/v1";
+import { routingBaseUrlEnum } from "./enums/v1";
 import {
   errorHandlerDevMiddlewareDev,
   notFoundRoute,
@@ -25,9 +35,14 @@ app.get("/", (req: Request, res: Response, next: NextFunction) => {
   });
 });
 
-app.use("/api/users", userRoute);
-app.use("/api/profiles", profileRoute);
-app.use("/api/connect", followRoute);
+app.use(routingBaseUrlEnum.USER_V1_BASEURL, userRoute);
+app.use(routingBaseUrlEnum.PROFILE_V1_BASEURL, profileRoute);
+app.use(routingBaseUrlEnum.FOLLOWING_V1_BASEURL, followRoute);
+app.use(routingBaseUrlEnum.COMMENT_V1_BASEURL, commentRoute);
+app.use(routingBaseUrlEnum.CONTEST_V1_BASEURL, contestRoute);
+app.use(routingBaseUrlEnum.POST_V1_BASEURL, postRoute);
+app.use(routingBaseUrlEnum.USERLIKES_V1_BASEURL, userLikeRoute);
+app.use(routingBaseUrlEnum.VOTES_V1_BASEURL, voteRoute);
 
 app.use(notFoundRoute);
 

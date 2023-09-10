@@ -51,9 +51,29 @@ class PostsController implements PostControllerInterface {
         OR: [
           {
             isContestPost: true,
+            contest: {
+              OR: [
+                {
+                  isCompetitionOn: true,
+                },
+                {
+                  isOpenForEntry: true,
+                },
+              ],
+            },
           },
           {
             isContestPost: true,
+            contest: {
+              OR: [
+                {
+                  isCompetitionOn: true,
+                },
+                {
+                  isOpenForEntry: true,
+                },
+              ],
+            },
             user: {
               userFollowing: {
                 every: {

@@ -13,6 +13,12 @@ export interface CommentPostControllerInterface {
     next: NextFunction
   ): Promise<void>;
 
+  getRepliesOnCommentId(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void>;
+
   createCommentOnPost(
     req: Request,
     res: Response,

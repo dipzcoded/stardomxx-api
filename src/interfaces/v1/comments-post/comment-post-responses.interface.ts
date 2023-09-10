@@ -6,6 +6,11 @@ export interface getPostComments {
   payload: UserPostComment[];
 }
 
+export interface getCommentReplies {
+  status: ResponseStatusSignalEnum;
+  payload: UserPostCommentReply[];
+}
+
 export interface createAndUpdatePostComment {
   status: ResponseStatusSignalEnum;
   payload: UserPostComment;
