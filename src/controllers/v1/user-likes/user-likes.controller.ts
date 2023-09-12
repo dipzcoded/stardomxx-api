@@ -34,20 +34,29 @@ class UserLikesController
     const { page, perPage } = req.query;
     const offSet = (page - 1) * perPage;
     const customRequest = req as UserLoggedInRequest;
-    const userLikesPosts = await prismaClient.userPostLikes.findMany({
-      where: {
-        userId: customRequest.user.id,
-      },
-      skip: offSet,
-      take: perPage,
-      include: {
-        post: true,
-        user: true,
-      },
-    });
+    const [userLikesPosts, userLikesPostsCounts] =
+      await prismaClient.$transaction([
+        prismaClient.userPostLikes.findMany({
+          where: {
+            userId: customRequest.user.id,
+          },
+          skip: Number(offSet),
+          take: Number(perPage),
+          include: {
+            post: true,
+            user: true,
+          },
+        }),
+        prismaClient.userPostLikes.count({
+          where: {
+            userId: customRequest.user.id,
+          },
+        }),
+      ]);
 
     res.status(ResponseStatusCodeEnum.OK).json({
       status: ResponseStatusSignalEnum.SUCCESS,
+      resultLength: userLikesPostsCounts,
       payload: userLikesPosts,
     });
   }
@@ -63,7 +72,7 @@ class UserLikesController
 
     const post = await prismaClient.userPosts.findFirst({
       where: {
-        id: postId,
+        id: Number(postId),
       },
     });
 
@@ -95,7 +104,7 @@ class UserLikesController
     const { id: commentId } = req.params;
     const comment = await prismaClient.userComment.findFirst({
       where: {
-        id: commentId,
+        id: Number(commentId),
       },
     });
 
@@ -138,7 +147,7 @@ class UserLikesController
 
     const commentReply = await prismaClient.userPostCommentReply.findUnique({
       where: {
-        id: commentReplyId,
+        id: Number(commentReplyId),
       },
     });
 
@@ -169,7 +178,7 @@ class UserLikesController
     const customRequest = req as UserLoggedInRequest;
     const post = await prismaClient.userPosts.findFirst({
       where: {
-        id: postId,
+        id: Number(postId),
         userId: customRequest.user.id,
       },
     });
@@ -181,7 +190,7 @@ class UserLikesController
 
     const isPostAlreadyLiked = await prismaClient.userPostLikes.findFirst({
       where: {
-        postId,
+        postId: Number(postId),
         userId: customRequest.user.id,
       },
     });
@@ -193,7 +202,7 @@ class UserLikesController
 
     const postlike = await prismaClient.userPostLikes.create({
       data: {
-        postId,
+        postId: Number(postId),
         userId: customRequest.user.id,
       },
     });
@@ -215,7 +224,7 @@ class UserLikesController
     const customRequest = req as UserLoggedInRequest;
     const post = await prismaClient.userPosts.findFirst({
       where: {
-        id: postId,
+        id: Number(postId),
         userId: customRequest.user.id,
       },
     });
@@ -227,7 +236,7 @@ class UserLikesController
 
     const isPostAlreadyLiked = await prismaClient.userPostLikes.findFirst({
       where: {
-        postId,
+        postId: Number(postId),
         userId: customRequest.user.id,
       },
     });
@@ -259,8 +268,8 @@ class UserLikesController
 
     const postComment = await prismaClient.userPostComment.findFirst({
       where: {
-        postId,
-        commentId,
+        postId: Number(postId),
+        commentId: Number(commentId),
       },
     });
 
@@ -307,8 +316,8 @@ class UserLikesController
 
     const postComment = await prismaClient.userPostComment.findFirst({
       where: {
-        postId,
-        commentId,
+        postId: Number(postId),
+        commentId: Number(commentId),
       },
     });
 
@@ -360,8 +369,8 @@ class UserLikesController
 
     const postComment = await prismaClient.userPostComment.findFirst({
       where: {
-        commentId,
-        postId,
+        commentId: Number(commentId),
+        postId: Number(postId),
       },
     });
 
@@ -371,8 +380,8 @@ class UserLikesController
     }
     const postCommentReply = await prismaClient.userPostCommentReply.findFirst({
       where: {
-        commentId,
-        commentReplyId,
+        commentId: Number(commentId),
+        commentReplyId: Number(commentReplyId),
         postCommentId: postComment.id,
         userId: customRequest.user.id,
       },
@@ -427,8 +436,8 @@ class UserLikesController
     const customRequest = req as UserLoggedInRequest;
     const postComment = await prismaClient.userPostComment.findFirst({
       where: {
-        commentId,
-        postId,
+        commentId: Number(commentId),
+        postId: Number(postId),
       },
     });
 
@@ -438,8 +447,8 @@ class UserLikesController
     }
     const postCommentReply = await prismaClient.userPostCommentReply.findFirst({
       where: {
-        commentId,
-        commentReplyId,
+        commentId: Number(commentId),
+        commentReplyId: Number(commentReplyId),
         postCommentId: postComment.id,
         userId: customRequest.user.id,
       },

@@ -33,13 +33,11 @@ class FollowingController implements FollowingControllerInterface {
     });
 
     if (!userExist) {
-      // TODO: throw an error
       next(new NotFoundError("user not found"));
       return;
     }
 
     if (userExist.id === customRequest.user.id) {
-      // TODO: throw an error
       next(new ForbiddenError("cannot perform this action"));
       return;
     }
@@ -51,7 +49,6 @@ class FollowingController implements FollowingControllerInterface {
     });
 
     if (!userFollowing.length) {
-      // TODO: throw an error
       next(new BadRequestError("you dont have followers yet"));
       return;
     } else {
@@ -59,26 +56,48 @@ class FollowingController implements FollowingControllerInterface {
         where: {
           userId: customRequest.user.id,
           userFollowing: {
-            none: {
+            some: {
               id: userExist.id,
             },
           },
         },
       });
 
-      if (userFollowing) {
-        // TODO: throw an error
+      if (!userFollowing) {
         next(new InvalidRequestError("you are not folllowing the user"));
         return;
       } else {
-        await prismaClient.user.update({
+        const userHaveFollowers = await prismaClient.userFollowers.findFirst({
           where: {
-            id: customRequest.user.id,
+            userId: userExist.id,
+          },
+        });
+
+        if (!userHaveFollowers) {
+          next(new NotFoundError("user does not have any Followers"));
+          return;
+        }
+
+        await prismaClient.userFollowing.update({
+          where: {
+            id: userFollowing.id,
           },
           data: {
             userFollowing: {
               disconnect: {
                 id: userExist.id,
+              },
+            },
+          },
+        });
+        await prismaClient.userFollowers.update({
+          where: {
+            id: userHaveFollowers.id,
+          },
+          data: {
+            userFollowers: {
+              disconnect: {
+                id: customRequest.user.id,
               },
             },
           },
@@ -105,28 +124,28 @@ class FollowingController implements FollowingControllerInterface {
       },
     });
     if (!userExist) {
-      // TODO: throw an error
-      throw new Error("user not found");
+      next(new NotFoundError("user does not exist"));
+      return;
     }
 
     if (userExist.id === customRequest.user.id) {
-      // TODO: throw an error
-      throw new Error("cannot peform this action");
+      next(new InvalidRequestError("cannot follow yourself"));
+      return;
     }
     // checking if user have any followers
-    const userFollowing = await prismaClient.userFollowing.findMany({
+    const userFollowingCounts = await prismaClient.userFollowing.count({
       where: {
         userId: customRequest.user.id,
       },
     });
 
-    const userFollowing2 = await prismaClient.userFollowers.findMany({
+    const userFollowing2Counts = await prismaClient.userFollowers.count({
       where: {
         userId: userExist.id,
       },
     });
 
-    if (!userFollowing.length && !userFollowing2.length) {
+    if (!userFollowingCounts && !userFollowing2Counts) {
       await prismaClient.userFollowing.create({
         data: {
           userId: customRequest.user.id,
@@ -149,68 +168,109 @@ class FollowingController implements FollowingControllerInterface {
         },
       });
     } else {
-      const userNotFollowing = await prismaClient.userFollowing.findFirst({
+      const userHaveFollowing = await prismaClient.userFollowing.findFirst({
         where: {
           userId: customRequest.user.id,
-          userFollowing: {
-            none: {
-              id: userExist.id,
-            },
-          },
         },
       });
 
-      if (!userNotFollowing) {
-        // TODO: throw an error
-        // throw new Error("user already followed");
-        next(new InvalidRequestError("user already followed"));
-        return;
+      if (userHaveFollowing) {
+        const userNotFollowing = await prismaClient.userFollowing.findFirst({
+          where: {
+            userId: customRequest.user.id,
+            userFollowing: {
+              none: {
+                id: userExist.id,
+              },
+            },
+          },
+        });
+        if (!userNotFollowing) {
+          next(new InvalidRequestError("user already followed"));
+          return;
+        } else {
+          const userHaveFollowers = await prismaClient.userFollowers.findFirst({
+            where: {
+              userId: userExist.id,
+            },
+          });
+
+          await prismaClient.userFollowing.update({
+            where: {
+              id: userNotFollowing.id,
+            },
+            data: {
+              userFollowing: {
+                connect: {
+                  id: userExist.id,
+                },
+              },
+            },
+          });
+
+          userHaveFollowers
+            ? await prismaClient.userFollowers.update({
+                where: {
+                  id: userHaveFollowers.id,
+                },
+                data: {
+                  userFollowers: {
+                    connect: {
+                      id: customRequest.user.id,
+                    },
+                  },
+                },
+              })
+            : await prismaClient.userFollowers.create({
+                data: {
+                  userId: userExist.id,
+                  userFollowers: {
+                    connect: {
+                      id: customRequest.user.id,
+                    },
+                  },
+                },
+              });
+        }
+      } else {
+        const userHaveFollower = await prismaClient.userFollowers.findFirst({
+          where: {
+            userId: userExist.id,
+            userFollowers: {
+              none: {
+                id: customRequest.user.id,
+              },
+            },
+          },
+        });
+
+        await prismaClient.userFollowing.create({
+          data: {
+            userId: customRequest.user.id,
+            userFollowing: {
+              connect: {
+                id: userExist.id,
+              },
+            },
+          },
+        });
+
+        if (userHaveFollower) {
+          await prismaClient.userFollowers.update({
+            where: {
+              id: userHaveFollower.id,
+            },
+            data: {
+              userFollowers: {
+                connect: {
+                  id: customRequest.user.id,
+                },
+              },
+            },
+          });
+        }
       }
-
-      const userNotFollowing2 = await prismaClient.userFollowers.findFirst({
-        where: {
-          userId: userExist.id,
-          userFollowers: {
-            none: {
-              id: customRequest.user.id,
-            },
-          },
-        },
-      });
-
-      if (userNotFollowing2 && !userNotFollowing) {
-        // TODO: throw an error
-        // throw new Error("user already followed");
-        next(new InvalidRequestError("already followed"));
-        return;
-      }
-
-      await prismaClient.userFollowing.update({
-        where: {
-          id: userNotFollowing.id,
-        },
-        data: {
-          userFollowing: {
-            connect: {
-              id: userExist.id,
-            },
-          },
-        },
-      });
     }
-
-    await prismaClient.userFollowers.update({
-      where: {
-        id: userExist.id,
-      },
-      data: {
-        userFollowers: {
-          connect: {
-            id: customRequest.user.id,
-          },
-        },
-      },
-    });
 
     res.status(ResponseStatusCodeEnum.OK).json({
       status: ResponseStatusSignalEnum.SUCCESS,
@@ -224,9 +284,6 @@ class FollowingController implements FollowingControllerInterface {
   ): Promise<void> {
     const { userId } = req.params;
     const customRequest = req as UserLoggedInRequest;
-   
-
-    // check if user exist
 
     const userExist = await prismaClient.user.findUnique({
       where: {
@@ -234,26 +291,22 @@ class FollowingController implements FollowingControllerInterface {
       },
     });
     if (!userExist) {
-      // TODO: throw an error
       next(new NotFoundError("user not found"));
       return;
     }
 
     if (userExist.id === customRequest.user.id) {
-      // TODO: throw an error
       next(new ForbiddenError("cannot perform this action"));
       return;
     }
     // checking if user have any followers
-    const userFollowers = await prismaClient.userFollowers.findMany({
+    const userFollowersCount = await prismaClient.userFollowers.count({
       where: {
         userId: customRequest.user.id,
       },
     });
 
-    if (!userFollowers.length) {
-      // TODO: throw an error
-      // throw new Error("user not following");
+    if (!userFollowersCount) {
       next(new NotFoundError("dont have any followers to unfollow"));
       return;
     } else {
@@ -261,27 +314,49 @@ class FollowingController implements FollowingControllerInterface {
         where: {
           userId: customRequest.user.id,
           userFollowers: {
-            none: {
+            some: {
               id: userExist.id,
             },
           },
         },
       });
 
-      if (userNotFollowing) {
-        // TODO: throw an error
-        // throw new Error("user not following");
+      if (!userNotFollowing) {
         next(new NotFoundError("the user is not following you"));
         return;
       } else {
-        await prismaClient.user.update({
+        const userFollowing = await prismaClient.userFollowing.findFirst({
           where: {
-            id: customRequest.user.id,
+            userId: userExist.id,
+          },
+        });
+
+        if (!userFollowing) {
+          next(new NotFoundError("user does not have any following"));
+          return;
+        }
+
+        await prismaClient.userFollowers.update({
+          where: {
+            id: userNotFollowing.id,
           },
           data: {
-            followers: {
+            userFollowers: {
               disconnect: {
                 id: userExist.id,
+              },
+            },
+          },
+        });
+
+        await prismaClient.userFollowing.update({
+          where: {
+            id: userFollowing.id,
+          },
+          data: {
+            userFollowing: {
+              disconnect: {
+                id: customRequest.user.id,
               },
             },
           },
@@ -290,7 +365,7 @@ class FollowingController implements FollowingControllerInterface {
 
       res.status(ResponseStatusCodeEnum.OK).json({
         status: ResponseStatusSignalEnum.SUCCESS,
-        payload: "user follower unfollowed",
+        payload: "user follower removed",
       });
     }
   }

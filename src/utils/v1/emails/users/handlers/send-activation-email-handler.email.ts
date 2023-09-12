@@ -1,20 +1,28 @@
 import { User } from "@prisma/client";
-import { transportInit } from "../../transporter-client.email";
+import axios from "axios";
+import FormData from "form-data";
+import { convert } from "html-to-text";
 
 export const sendActivationTokenToUserMail = async (
   user: User,
   url: string
 ) => {
-  const mailOptions = {
-    from: "stardom@mail.io",
-    to: user.email,
-    subject: "Activate Account",
-    text: `This is the activation link to verify your account: ${url}`,
-  };
+  const formData = new FormData();
+  formData.append("to", user.email);
+  formData.append("subject", "Account Activation");
+  formData.append(
+    "text",
+    convert(
+      `<p>This is the activation link to verify your account: <a href=${url}>Activation Link</a></p>`
+    )
+  );
+  formData.append(
+    "html",
+    `<p>This is the activation link to verify your account: <a href=${url}>Activation Link</a></p>`
+  );
 
   try {
-    const transporter = await transportInit();
-    transporter!.sendMail(mailOptions);
+    await axios.post(process.env.EMAIL_SENDING_URL!, formData);
   } catch (error) {
     console.error(error);
   }

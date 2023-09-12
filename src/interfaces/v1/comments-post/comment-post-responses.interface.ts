@@ -3,11 +3,13 @@ import { ResponseStatusSignalEnum } from "../../../enums/v1";
 
 export interface getPostComments {
   status: ResponseStatusSignalEnum;
+  resultLength: number;
   payload: UserPostComment[];
 }
 
 export interface getCommentReplies {
   status: ResponseStatusSignalEnum;
+  resultLength: number;
   payload: UserPostCommentReply[];
 }
 

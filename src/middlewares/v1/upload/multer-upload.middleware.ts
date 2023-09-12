@@ -20,7 +20,7 @@ export const uploadImageStorage = multer({
   storage,
   limits: {
     files: 4,
-    fileSize: 1024 * 1024 * 10,
+    fileSize: 1024 * 1024 * 5,
   },
   fileFilter(req, file, callback) {
     const allowedExtensions = [".jpg", ".jpeg", ".png"];
@@ -42,7 +42,7 @@ export const uploadVideoStorage = multer({
   storage,
   limits: {
     files: 1,
-    fileSize: 1024 * 1024 * 50,
+    fileSize: 1024 * 1024 * 25,
   },
   fileFilter(req, file, callback) {
     const allowedExtensions = [".gif", ".mp4"];

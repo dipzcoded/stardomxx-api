@@ -1,3 +1,4 @@
+import express, { Router } from "express";
 import { ContestController } from "../../../controllers/v1";
 import {
   requiresAuthMiddleware,
@@ -9,9 +10,10 @@ import {
   getContestsQueryValidator,
   userContestIdParamValidator,
 } from "../../../middlewares/v1/validator/contest";
-import { paginationSearchQueryValidator } from '../../../middlewares/v1/validator/query'
+import { paginationSearchQueryValidator } from "../../../middlewares/v1/validator/query";
 import { idParamValidator } from "../../../middlewares/v1/validator/param";
-import { router } from "../../../utils/v1";
+
+const router: Router = express.Router();
 
 const contest = new ContestController();
 

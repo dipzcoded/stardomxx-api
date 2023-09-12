@@ -1,3 +1,4 @@
+import express, { Router } from "express";
 import { UserLikesController } from "../../../controllers/v1";
 import { requiresAuthMiddleware } from "../../../middlewares/v1/auth";
 import { requestValidationMiddleware } from "../../../middlewares/v1/validator";
@@ -10,7 +11,8 @@ import {
   idParamValidator,
   postidParamValidator,
 } from "../../../middlewares/v1/validator/param";
-import router from "../users/user.route";
+
+const router: Router = express.Router();
 
 const userLikes = new UserLikesController();
 

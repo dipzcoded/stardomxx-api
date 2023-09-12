@@ -3,27 +3,34 @@ export default [
   query("page")
     .isInt({
       min: 1,
+      max: 100,
     })
-    .withMessage("page must be an integer with a minimum value of 1")
+    .withMessage(
+      "page must be an integer with a minimum value of 1 and maximum of 100"
+    )
     .not()
     .isEmpty()
     .withMessage("page is required"),
   query("perPage")
     .isInt({
       min: 1,
+      max: 100,
     })
-    .withMessage("perPage musy be an integer with a minimum value of 1")
+    .withMessage(
+      "perPage musy be an integer with a minimum value of 1 and maximum of 100"
+    )
     .not()
     .isEmpty()
     .withMessage("perPage is required"),
   query("search")
     .optional({ values: "null" })
-    .trim()
     .isString()
-    .withMessage("search must be a string type"),
+    .withMessage("search must be a string type")
+    .trim(),
   query("findContestPost")
     .optional({
       values: "null",
     })
-    .isBoolean().withMessage("findContestPost must be a boolean type"),
+    .isBoolean()
+    .withMessage("findContestPost must be a boolean type"),
 ];

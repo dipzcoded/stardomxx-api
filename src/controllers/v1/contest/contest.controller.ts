@@ -37,53 +37,91 @@ class ContestController implements ContestControllerInterface {
     const offSet = (page - 1) * perPage;
 
     let contests: Contest[] = [];
-    let isBoolean: boolean;
+    let contestsCount: number = 0;
+    let isBoolean: boolean = false;
+
     if (isOngoing && !isAllowingEntry) {
       isBoolean = JSON.parse(isOngoing) as boolean;
-      contests = await prismaClient.contest.findMany({
-        where: {
-          isCompetitionOn: isBoolean,
-          isOpenForEntry: false,
-        },
-        take: perPage,
-        skip: offSet,
-        include: {
-          contestants: true,
-          contestPosts: true,
-        },
-      });
+      const [data1, data2] = await prismaClient.$transaction([
+        prismaClient.contest.findMany({
+          where: {
+            isCompetitionOn: isBoolean,
+            isOpenForEntry: false,
+          },
+          take: Number(perPage),
+          skip: Number(offSet),
+          include: {
+            contestants: {
+              include: {
+                user: true,
+              },
+            },
+            contestPosts: true,
+          },
+        }),
+        prismaClient.contest.count({
+          where: {
+            isCompetitionOn: isBoolean,
+            isOpenForEntry: false,
+          },
+        }),
+      ]);
+      contests = data1;
+      contestsCount = data2;
     } else if (isAllowingEntry && !isOngoing) {
       isBoolean = JSON.parse(isAllowingEntry) as boolean;
-      contests = await prismaClient.contest.findMany({
-        where: {
-          isCompetitionOn: false,
-          isOpenForEntry: isBoolean,
-        },
-        take: perPage,
-        skip: offSet,
-        include: {
-          contestants: {
-            include: {
-              user: true,
-            },
+      const [data1, data2] = await prismaClient.$transaction([
+        prismaClient.contest.findMany({
+          where: {
+            isCompetitionOn: false,
+            isOpenForEntry: isBoolean,
           },
-          contestPosts: true,
-        },
-      });
+          take: Number(perPage),
+          skip: Number(offSet),
+          include: {
+            contestants: {
+              include: {
+                user: true,
+              },
+            },
+            contestPosts: true,
+          },
+        }),
+        prismaClient.contest.count({
+          where: {
+            isCompetitionOn: false,
+            isOpenForEntry: isBoolean,
+          },
+        }),
+      ]);
+      contests = data1;
+      contestsCount = data2;
     } else {
-      contests = await prismaClient.contest.findMany({
-        where: {},
-        take: perPage,
-        skip: offSet,
-        include: {
-          contestants: true,
-          contestPosts: true,
-        },
-      });
+      const [data1, data2] = await prismaClient.$transaction([
+        prismaClient.contest.findMany({
+          where: {},
+          take: Number(perPage),
+          skip: Number(offSet),
+          include: {
+            contestants: {
+              include: {
+                user: true,
+              },
+            },
+            contestPosts: true,
+          },
+        }),
+        prismaClient.contest.count({
+          where: {},
+        }),
+      ]);
+      contests = data1;
+      contestsCount = data2;
     }
 
     res.status(ResponseStatusCodeEnum.OK).json({
       status: ResponseStatusSignalEnum.SUCCESS,
+      resultLength: contestsCount,
       payload: contests,
     });
   }
@@ -155,7 +193,7 @@ class ContestController implements ContestControllerInterface {
 
     const contest = await prismaClient.contest.findUnique({
       where: {
-        id: contestId,
+        id: Number(contestId),
       },
     });
 
@@ -214,7 +252,7 @@ class ContestController implements ContestControllerInterface {
     const { id: contestId } = req.params;
     const contest = await prismaClient.contest.findUnique({
       where: {
-        id: contestId,
+        id: Number(contestId),
       },
     });
 
@@ -225,7 +263,7 @@ class ContestController implements ContestControllerInterface {
 
     await prismaClient.contest.delete({
       where: {
-        id: contestId,
+        id: Number(contestId),
       },
     });
 
@@ -247,7 +285,7 @@ class ContestController implements ContestControllerInterface {
 
     const contest = await prismaClient.contest.findUnique({
       where: {
-        id: contestId,
+        id: Number(contestId),
       },
     });
 
@@ -263,7 +301,7 @@ class ContestController implements ContestControllerInterface {
 
     const hasUserAlreadyJoined = await prismaClient.contestant.findFirst({
       where: {
-        contestId,
+        contestId: Number(contestId),
         userId: customRequest.user.id,
       },
     });
@@ -280,7 +318,7 @@ class ContestController implements ContestControllerInterface {
     const newContestant = await prismaClient.contestant.create({
       data: {
         userId: customRequest.user.id,
-        contestId,
+        contestId: Number(contestId),
       },
     });
 
@@ -306,25 +344,37 @@ class ContestController implements ContestControllerInterface {
     const { page, perPage } = req.query;
     const offSet = (page - 1) * perPage;
     const customRequest = req as UserLoggedInRequest;
-    let joinedContests;
-    joinedContests = await prismaClient.contest.findMany({
-      where: {
-        contestants: {
-          every: {
-            userId: customRequest.user.id,
+
+    let [joinedContests, joinContestCount] = await prismaClient.$transaction([
+      prismaClient.contest.findMany({
+        where: {
+          contestants: {
+            every: {
+              userId: customRequest.user.id,
+            },
           },
         },
-      },
-      skip: offSet,
-      take: perPage,
-      include: {
-        contestants: true,
-        contestPosts: true,
-      },
-    });
+        skip: Number(offSet),
+        take: Number(perPage),
+        include: {
+          contestants: true,
+          contestPosts: true,
+        },
+      }),
+      prismaClient.contest.count({
+        where: {
+          contestants: {
+            every: {
+              userId: customRequest.user.id,
+            },
+          },
+        },
+      }),
+    ]);
 
     res.status(ResponseStatusCodeEnum.OK).json({
       status: ResponseStatusSignalEnum.SUCCESS,
+      resultLength: joinContestCount,
       payload: joinedContests,
     });
   }
@@ -340,7 +390,7 @@ class ContestController implements ContestControllerInterface {
 
     const contest = await prismaClient.contest.findUnique({
       where: {
-        id: contestId,
+        id: Number(contestId),
       },
     });
 
@@ -351,7 +401,7 @@ class ContestController implements ContestControllerInterface {
 
     const user = await prismaClient.user.findUnique({
       where: {
-        id: userId,
+        id: Number(userId),
       },
     });
 
@@ -363,7 +413,7 @@ class ContestController implements ContestControllerInterface {
     const isUserAContestantForTheContest =
       await prismaClient.contestant.findFirst({
         where: {
-          contestId,
+          contestId: Number(contestId),
           userId: user.id,
         },
       });

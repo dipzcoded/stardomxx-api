@@ -7,4 +7,5 @@ export enum routingBaseUrlEnum {
   USERLIKES_V1_BASEURL = "/api/v1/user-likes",
   CONTEST_V1_BASEURL = "/api/v1/contests",
   USER_V1_BASEURL = "/api/v1/users",
+  UPLOAD_V1_BASEURL = "/api/v1/uploads",
 }

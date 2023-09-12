@@ -1,4 +1,4 @@
-import { router } from "../../../utils/v1";
+import express, { Router } from "express";
 import { VoteController } from "../../../controllers/v1";
 import {
   voteContestantParamValidator,
@@ -6,6 +6,7 @@ import {
 } from "../../../middlewares/v1/validator/votes";
 import { requiresAuthMiddleware } from "../../../middlewares/v1/auth";
 import { requestValidationMiddleware } from "../../../middlewares/v1/validator";
+const router: Router = express.Router();
 const vote = new VoteController();
 router
   .route("/contest/:contestId/post/:postId")

@@ -1,4 +1,4 @@
-import { router } from "../../../utils/v1";
+import express, { Router } from "express";
 import { uploadImageStorage } from "../../../middlewares/v1/upload";
 import { ProfileController } from "../../../controllers/v1";
 import { requestValidationMiddleware } from "../../../middlewares/v1/validator";
@@ -8,6 +8,7 @@ import {
   addNextofkinValidator,
   createProfileValidator,
 } from "../../../middlewares/v1/validator/profiles";
+const router: Router = express.Router();
 const profileController = new ProfileController();
 
 router

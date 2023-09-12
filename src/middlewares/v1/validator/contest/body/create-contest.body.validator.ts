@@ -1,16 +1,16 @@
 import { body } from "express-validator";
 export default [
   body("name")
-    .trim()
     .isString()
     .withMessage("name must be a string type")
+    .trim()
     .not()
     .isEmpty()
     .withMessage("name is required"),
   body("category")
-    .trim()
     .isString()
     .withMessage("category must be a string type")
+    .trim()
     .not()
     .isEmpty()
     .withMessage("category is required"),

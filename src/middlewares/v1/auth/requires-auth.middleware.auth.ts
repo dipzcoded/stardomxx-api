@@ -34,17 +34,21 @@ export default (req: Request, res: Response, next: NextFunction) => {
     } catch (error) {
       if (error instanceof TokenExpiredError) {
         next(new InvalidRequestError("Authorization is Invalid"));
+        return;
       }
 
       if (error instanceof JsonWebTokenError) {
         next(new InvalidRequestError("Authorization is Invalid"));
+        return;
       }
 
       if (error instanceof NotBeforeError) {
         next(new InvalidRequestError("Authorization is Invalid"));
+        return;
       }
     }
   } else {
     next(new ForbiddenError("No Bearer token passed!"));
+    return;
   }
 };

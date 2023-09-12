@@ -1,4 +1,4 @@
-import { router } from "../../../utils/v1";
+import express, { Router } from "express";
 import { UserController } from "../../../controllers/v1";
 import {
   accountActivationValidator,
@@ -10,6 +10,7 @@ import {
 import { requestValidationMiddleware } from "../../../middlewares/v1/validator";
 import { requiresAuthMiddleware } from "../../../middlewares/v1/auth";
 import { uploadImageStorage } from "../../../middlewares/v1/upload";
+const router: Router = express.Router();
 const userController = new UserController();
 
 // non protected routes

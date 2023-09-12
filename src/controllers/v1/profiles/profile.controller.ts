@@ -288,7 +288,8 @@ class ProfileController implements ProfileControllerInterface {
       });
 
       if (!userProfile) {
-        throw new NotFoundError("User needs to have a profile");
+        next(new NotFoundError("User needs to have a profile"));
+        return;
       }
 
       const userNextOfKin = await prismaClient.userNextOfKin.findFirst({
@@ -299,7 +300,8 @@ class ProfileController implements ProfileControllerInterface {
         },
       });
       if (userNextOfKin) {
-        throw new BadRequestError("User already have next of kin");
+        next(new BadRequestError("User already have next of kin"));
+        return;
       }
 
       const filePath = files[0]["path"] as PathLike;
@@ -402,7 +404,8 @@ class ProfileController implements ProfileControllerInterface {
       });
 
       if (!userProfile) {
-        throw new NotFoundError("User needs to have a profile");
+        next(new NotFoundError("User needs to have a profile"));
+        return;
       }
 
       const userEmergencyContact =
@@ -414,7 +417,8 @@ class ProfileController implements ProfileControllerInterface {
           },
         });
       if (userEmergencyContact) {
-        throw new BadRequestError("User already have an emergency contact");
+        next(new BadRequestError("User already have an emergency contact"));
+        return;
       }
 
       const filePath = files[0]["path"] as PathLike;

@@ -1,3 +1,4 @@
 export interface PostContentBodyDto {
-  content: string;
+  content?: string;
+  mediaContent?: string;
 }

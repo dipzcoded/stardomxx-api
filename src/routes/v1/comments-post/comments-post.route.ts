@@ -1,4 +1,4 @@
-import { router } from "../../../utils/v1";
+import express, { Router } from "express";
 import {
   requiresAuthMiddleware,
   //   restrictUsersFromResourceMiddleware,
@@ -14,10 +14,12 @@ import {
 import { postidParamValidator } from "../../../middlewares/v1/validator/param";
 import { paginationSearchQueryValidator } from "../../../middlewares/v1/validator/query";
 
+const router: Router = express.Router();
+
 const comment = new CommentsPostController();
 
 router
-  .route("/me")
+  .route("/me2")
   .get(
     requiresAuthMiddleware,
     paginationSearchQueryValidator,

@@ -12,6 +12,7 @@ export interface getPostCountLikes {
 
 export interface getPostLikes {
   status: ResponseStatusSignalEnum;
+  resultLength: number;
   payload: UserPostLikes[];
 }
 

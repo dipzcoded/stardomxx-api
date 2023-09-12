@@ -139,7 +139,8 @@ class UserController implements UserControllerInterface {
         },
       });
       if (userFound) {
-        throw new BadRequestError("User already exist with the provided email");
+        next(new BadRequestError("User already exist with the provided email"));
+        return;
       }
     } catch (error) {
       next(error);
@@ -283,6 +284,9 @@ class UserController implements UserControllerInterface {
         userFollowing: true,
       },
     });
+
+    // @ts-ignore
+    delete userLoggedin?.password;
 
     res.status(ResponseStatusCodeEnum.OK).json({
       status: ResponseStatusSignalEnum.SUCCESS,

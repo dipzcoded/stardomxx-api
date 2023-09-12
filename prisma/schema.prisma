@@ -150,7 +150,7 @@ model UserEmergencyContact {
 
 model UserFollowers {
   id            Int      @id @default(autoincrement())
-  userId        Int
+  userId        Int 
   userFollowers User[]   @relation(name: "Followers")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -160,7 +160,7 @@ model UserFollowers {
 
 model UserFollowing {
   id            Int      @id @default(autoincrement())
-  userId        Int
+  userId        Int 
   userFollowing User[]   @relation(name: "Following")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

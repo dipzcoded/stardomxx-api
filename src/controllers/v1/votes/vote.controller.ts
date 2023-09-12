@@ -32,7 +32,7 @@ class VoteController implements VotesControllerInterface {
 
     const contestFound = await prismaClient.contest.findUnique({
       where: {
-        id: contestId,
+        id: Number(contestId),
       },
     });
 
@@ -43,9 +43,9 @@ class VoteController implements VotesControllerInterface {
 
     const isContestPost = await prismaClient.userPosts.findFirst({
       where: {
-        id: postId,
+        id: Number(postId),
         isContestPost: true,
-        contestId,
+        contestId: Number(contestId),
       },
     });
 
@@ -77,7 +77,7 @@ class VoteController implements VotesControllerInterface {
 
     const contestFound = await prismaClient.contest.findUnique({
       where: {
-        id: contestId,
+        id: Number(contestId),
       },
     });
 
@@ -88,8 +88,8 @@ class VoteController implements VotesControllerInterface {
 
     const contestant = await prismaClient.contestant.findFirst({
       where: {
-        contestId,
-        userId,
+        contestId: Number(contestId),
+        userId: Number(userId),
       },
     });
 
@@ -123,7 +123,7 @@ class VoteController implements VotesControllerInterface {
 
     const contestFound = await prismaClient.contest.findUnique({
       where: {
-        id: contestId,
+        id: Number(contestId),
       },
     });
 
@@ -134,8 +134,8 @@ class VoteController implements VotesControllerInterface {
 
     const contestPost = await prismaClient.userPosts.findFirst({
       where: {
-        id: postId,
-        contestId,
+        id: Number(postId),
+        contestId: Number(contestId),
         isContestPost: true,
       },
     });
@@ -189,7 +189,7 @@ class VoteController implements VotesControllerInterface {
 
     const contestFound = await prismaClient.contest.findUnique({
       where: {
-        id: contestId,
+        id: Number(contestId),
       },
     });
 
@@ -200,8 +200,8 @@ class VoteController implements VotesControllerInterface {
 
     const contestant = await prismaClient.contestant.findFirst({
       where: {
-        contestId,
-        userId,
+        contestId: Number(contestId),
+        userId: Number(userId),
       },
     });
 
@@ -219,9 +219,9 @@ class VoteController implements VotesControllerInterface {
       await prismaClient.contestantVote.findFirst({
         where: {
           userId: customRequest.user.id,
-          contestantId: userId,
+          contestantId: Number(userId),
           contestant: {
-            contestId,
+            contestId: Number(contestId),
           },
         },
       });
@@ -233,7 +233,7 @@ class VoteController implements VotesControllerInterface {
 
     const newVote = await prismaClient.contestantVote.create({
       data: {
-        contestantId: userId,
+        contestantId: Number(userId),
         userId: customRequest.user.id,
       },
     });

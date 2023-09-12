@@ -36,20 +36,28 @@ class CommentsPostController implements CommentPostControllerInterface {
     const { page, perPage } = req.query;
     const offSet = (page - 1) * perPage;
     const customRequest = req as UserLoggedInRequest;
-    let userComments = await prismaClient.userPostComment.findMany({
-      where: {
-        userId: customRequest.user.id,
-      },
-      skip: offSet,
-      take: perPage,
-      orderBy: {
-        updatedAt: "asc",
-      },
-      include: {
-        post: true,
-        user: true,
-      },
-    });
+
+    let [userComments, userCommentsCount] = await prismaClient.$transaction([
+      prismaClient.userPostComment.findMany({
+        where: {
+          userId: customRequest.user.id,
+        },
+        skip: Number(offSet),
+        take: Number(perPage),
+        orderBy: {
+          updatedAt: "asc",
+        },
+        include: {
+          post: true,
+          user: true,
+        },
+      }),
+      prismaClient.userPostComment.count({
+        where: {
+          userId: customRequest.user.id,
+        },
+      }),
+    ]);
 
     userComments = userComments.map((el) => {
       // @ts-ignore
@@ -59,6 +67,7 @@ class CommentsPostController implements CommentPostControllerInterface {
 
     res.status(ResponseStatusCodeEnum.OK).json({
       status: ResponseStatusSignalEnum.SUCCESS,
+      resultLength: userCommentsCount,
       payload: userComments,
     });
   }
@@ -80,20 +89,27 @@ class CommentsPostController implements CommentPostControllerInterface {
     const { page, perPage } = req.query;
     const offSet = (page - 1) * perPage;
 
-    let postComments = await prismaClient.userPostComment.findMany({
-      where: {
-        postId,
-      },
-      skip: offSet,
-      take: perPage,
-      include: {
-        post: true,
-        user: true,
-      },
-      orderBy: {
-        updatedAt: "asc",
-      },
-    });
+    let [postComments, postCommentCounts] = await prismaClient.$transaction([
+      prismaClient.userPostComment.findMany({
+        where: {
+          postId: Number(postId),
+        },
+        skip: Number(offSet),
+        take: Number(perPage),
+        include: {
+          post: true,
+          user: true,
+        },
+        orderBy: {
+          updatedAt: "asc",
+        },
+      }),
+      prismaClient.userPostComment.count({
+        where: {
+          postId: Number(postId),
+        },
+      }),
+    ]);
 
     postComments = postComments.map((el) => {
       // @ts-ignore
@@ -103,6 +119,7 @@ class CommentsPostController implements CommentPostControllerInterface {
 
     res.status(ResponseStatusCodeEnum.OK).json({
       status: ResponseStatusSignalEnum.SUCCESS,
+      resultLength: postCommentCounts,
       payload: postComments,
     });
   }
@@ -125,19 +142,27 @@ class CommentsPostController implements CommentPostControllerInterface {
     const { page, perPage } = req.query;
     const offSet = (page - 1) * perPage;
     // const customRequest = req as UserLoggedInRequest;
-    let commentReplies = await prismaClient.userPostCommentReply.findMany({
-      where: {
-        commentId,
-      },
-      skip: offSet,
-      take: perPage,
-      orderBy: {
-        updatedAt: "asc",
-      },
-      include: {
-        user: true,
-      },
-    });
+    let [commentReplies, commentRepliesCounts] =
+      await prismaClient.$transaction([
+        prismaClient.userPostCommentReply.findMany({
+          where: {
+            commentId: Number(commentId),
+          },
+          skip: Number(offSet),
+          take: Number(perPage),
+          orderBy: {
+            updatedAt: "asc",
+          },
+          include: {
+            user: true,
+          },
+        }),
+        prismaClient.userPostCommentReply.count({
+          where: {
+            commentId: Number(commentId),
+          },
+        }),
+      ]);
 
     commentReplies = commentReplies.map((el) => {
       // @ts-ignore
@@ -147,6 +172,7 @@ class CommentsPostController implements CommentPostControllerInterface {
 
     res.status(ResponseStatusCodeEnum.OK).json({
       status: ResponseStatusSignalEnum.SUCCESS,
+      resultLength: commentRepliesCounts,
       payload: commentReplies,
     });
   }
@@ -163,7 +189,7 @@ class CommentsPostController implements CommentPostControllerInterface {
     const customRequest = req as UserLoggedInRequest;
     const post = await prismaClient.userPosts.findUnique({
       where: {
-        id: postId,
+        id: Number(postId),
       },
     });
     if (!post) {
@@ -219,8 +245,8 @@ class CommentsPostController implements CommentPostControllerInterface {
 
     const commentMadeOnPost = await prismaClient.userPostComment.findFirst({
       where: {
-        commentId,
-        postId,
+        commentId: Number(commentId),
+        postId: Number(postId),
       },
     });
 
@@ -238,7 +264,7 @@ class CommentsPostController implements CommentPostControllerInterface {
 
     const userReply = await prismaClient.userPostCommentReply.create({
       data: {
-        commentId,
+        commentId: Number(commentId),
         postCommentId: commentMadeOnPost.id,
         userId: newComment.userId,
         commentReplyId: newComment.id,
@@ -265,7 +291,7 @@ class CommentsPostController implements CommentPostControllerInterface {
 
     const commentFound = await prismaClient.userComment.findFirst({
       where: {
-        id: commentId,
+        id: Number(commentId),
         userId: customRequest.user.id,
       },
     });
@@ -319,7 +345,7 @@ class CommentsPostController implements CommentPostControllerInterface {
 
     const post = await prismaClient.userPosts.findFirst({
       where: {
-        id: postId,
+        id: Number(postId),
         userId: customRequest.user.id,
       },
     });
@@ -330,7 +356,7 @@ class CommentsPostController implements CommentPostControllerInterface {
 
     const comment = await prismaClient.userComment.findFirst({
       where: {
-        id: commentId,
+        id: Number(commentId),
         userId: customRequest.user.id,
       },
     });
@@ -343,21 +369,21 @@ class CommentsPostController implements CommentPostControllerInterface {
     // delete comment replies
     await prismaClient.userPostCommentReply.deleteMany({
       where: {
-        commentId,
+        commentId: Number(commentId),
       },
     });
 
     // delete post comment
     await prismaClient.userPostComment.delete({
       where: {
-        commentId: commentId,
+        commentId: Number(commentId),
       },
     });
 
     // delete comment
     await prismaClient.userComment.delete({
       where: {
-        id: commentId,
+        id: Number(commentId),
       },
     });
 
@@ -381,7 +407,7 @@ class CommentsPostController implements CommentPostControllerInterface {
 
     const comment = await prismaClient.userComment.findFirst({
       where: {
-        id: commentId,
+        id: Number(commentId),
         userId: customRequest.user.id,
       },
     });
@@ -405,8 +431,8 @@ class CommentsPostController implements CommentPostControllerInterface {
     const commentAsReplyFound =
       await prismaClient.userPostCommentReply.findFirst({
         where: {
-          commentReplyId,
-          commentId,
+          commentReplyId: Number(commentReplyId),
+          commentId: Number(commentId),
         },
       });
 

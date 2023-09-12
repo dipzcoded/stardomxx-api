@@ -6,6 +6,7 @@ import VoteController from "./votes/vote.controller";
 import PostsController from "./posts/posts.controller";
 import UserLikesController from "./user-likes/user-likes.controller";
 import ContestController from "./contest/contest.controller";
+import UploadController from "./upload/upload.controller";
 export {
   UserController,
   ProfileController,
@@ -15,4 +16,5 @@ export {
   PostsController,
   UserLikesController,
   VoteController,
+  UploadController,
 };

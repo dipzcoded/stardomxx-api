@@ -3,6 +3,7 @@ import { ResponseStatusSignalEnum } from "../../../enums/v1";
 
 export interface GetAllContest {
   status: ResponseStatusSignalEnum;
+  resultLength: number;
   payload: Contest[];
 }
 

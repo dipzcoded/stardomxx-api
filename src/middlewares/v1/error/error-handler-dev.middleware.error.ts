@@ -16,46 +16,58 @@ export default (
 ) => {
   if (req.files !== undefined && req.files.length) {
     const files = req.files as Express.Multer.File[];
+
     for (let i = 0; i < files.length; i++) {
       const filePath = files[i]["path"] as PathLike;
 
-      fs.access(filePath, fs.constants.F_OK, (err) => {
-        if (err) {
-          if (err.code === "ENOENT") {
-            return res.status(ResponseStatusCodeEnum.NOT_FOUND).json({
-              status: ResponseStatusSignalEnum.FAILED,
-              errors: [
-                {
-                  message: "File does not exist",
-                },
-              ],
-            });
+      const fileExist = fs.existsSync(filePath);
+
+      if (fileExist) {
+        fs.access(filePath, fs.constants.F_OK, (err) => {
+          if (err) {
+            if (err.code === "ENOENT") {
+              // loggin error
+              throw err;
+              // console.log("error 1");
+              // return res.status(ResponseStatusCodeEnum.NOT_FOUND).json({
+              //   status: ResponseStatusSignalEnum.FAILED,
+              //   errors: [
+              //     {
+              //       message: "File does not exist",
+              //     },
+              //   ],
+              // });
+            } else {
+              // Loggin error
+
+              throw err;
+              // return res.status(ResponseStatusCodeEnum.SERVER_ERROR).json({
+              //   status: ResponseStatusSignalEnum.FAILED,
+              //   errors: [
+              //     {
+              //       message: err.message,
+              //     },
+              //   ],
+              // });
+            }
           } else {
-            return res.status(ResponseStatusCodeEnum.SERVER_ERROR).json({
-              status: ResponseStatusSignalEnum.FAILED,
-              errors: [
-                {
-                  message: err.message,
-                },
-              ],
+            fs.unlink(filePath, (err) => {
+              if (err) {
+                throw err;
+                // console.log("error 1.8");
+                // return res.status(ResponseStatusCodeEnum.SERVER_ERROR).json({
+                //   status: ResponseStatusSignalEnum.FAILED,
+                //   errors: [
+                //     {
+                //       message: err.message,
+                //     },
+                //   ],
+                // });
+              }
             });
           }
-        } else {
-          fs.unlink(filePath, (err) => {
-            if (err) {
-              return res.status(ResponseStatusCodeEnum.SERVER_ERROR).json({
-                status: ResponseStatusSignalEnum.FAILED,
-                errors: [
-                  {
-                    message: err.message,
-                  },
-                ],
-              });
-            }
-            return;
-          });
-        }
-      });
+        });
+      }
     }
   }
 
@@ -92,13 +104,14 @@ export default (
         ],
       });
     }
+  } else {
+    return res.status(ResponseStatusCodeEnum.BAD).json({
+      status: ResponseStatusSignalEnum.FAILED,
+      errors: [
+        {
+          message: err.message,
+        },
+      ],
+    });
   }
-  res.status(ResponseStatusCodeEnum.BAD).json({
-    status: ResponseStatusSignalEnum.FAILED,
-    errors: [
-      {
-        message: err.message,
-      },
-    ],
-  });
 };
